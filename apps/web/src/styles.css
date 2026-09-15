@@ -1,0 +1,21 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'tailwindcss';
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #090b0f;
+  color: #ffffff;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

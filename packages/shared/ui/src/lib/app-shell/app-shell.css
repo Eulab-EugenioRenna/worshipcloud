@@ -1,0 +1,134 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  background:
+    radial-gradient(circle at 75% -20%, rgb(79 70 229 / 0.11), transparent 28rem),
+    #090b0f;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid #20242c;
+  background: rgb(11 13 18 / 0.92);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 2.75rem;
+  padding: 0 0.75rem;
+  color: #f7f7f8;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 0.45rem;
+  background: #5b5cf0;
+}
+
+.brand-mark span {
+  width: 2px;
+  border-radius: 999px;
+  background: white;
+}
+
+.brand-mark span:nth-child(1),
+.brand-mark span:nth-child(3) {
+  height: 0.45rem;
+  opacity: 0.68;
+}
+
+.brand-mark span:nth-child(2) {
+  height: 0.75rem;
+}
+
+nav {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 2rem;
+}
+
+.nav-item {
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.75rem;
+  border-radius: 0.45rem;
+  color: #9197a3;
+  font-size: 0.8rem;
+  font-weight: 560;
+  text-decoration: none;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.nav-item:hover {
+  color: #e9eaf0;
+  background: #14171d;
+}
+
+.nav-item-active {
+  color: #fff;
+  background: #191c24;
+}
+
+.nav-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 1.5px solid currentColor;
+  border-radius: 0.2rem;
+  opacity: 0.78;
+}
+
+.nav-icon[data-icon='live'] {
+  border-radius: 50%;
+  color: #ef4444;
+  box-shadow: inset 0 0 0 3px #0b0d12;
+  background: currentColor;
+}
+
+.content {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding-inline: 0.65rem;
+  }
+
+  .brand {
+    justify-content: center;
+  }
+
+  .brand > span:last-child,
+  .nav-item > span:last-child {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+  }
+}

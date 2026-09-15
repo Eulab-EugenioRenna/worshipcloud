@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/api/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  LEADER
+  OPERATOR
+  MEMBER
+  VIEWER
+}
+
+enum ServiceStatus {
+  DRAFT
+  PLANNING
+  READY
+  LIVE
+  COMPLETED
+}
+
+enum LineupItemType {
+  SONG
+  BIBLE
+  SLIDE
+  IMAGE
+  VIDEO
+  AUDIO
+  COUNTDOWN
+  CLOCK
+  SERMON
+  TEXT
+  BLANK
+}
+
+enum SongSectionType {
+  VERSE
+  PRE_CHORUS
+  CHORUS
+  BRIDGE
+  TAG
+  ENDING
+}
+
+model Organization {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  locations   Location[]
+  memberships Membership[]
+  services    Service[]
+  songs       Song[]
+}
+
+model Location {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services       Service[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model User {
+  id                  String       @id @default(cuid())
+  email               String       @unique
+  name                String
+  active              Boolean      @default(true)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  memberships         Membership[]
+  responsibleServices Service[]    @relation("ResponsibleUser")
+}
+
+model Membership {
+  organizationId String
+  userId         String
+  roles          UserRole[]
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@index([userId])
+}
+
+model Service {
+  id                String        @id @default(cuid())
+  organizationId    String
+  locationId        String
+  responsibleUserId String
+  title             String
+  date              DateTime      @db.Date
+  time              String
+  notes             String?
+  status            ServiceStatus @default(DRAFT)
+  teamReady         Boolean       @default(false)
+  mediaReady        Boolean       @default(false)
+  presentationReady Boolean       @default(false)
+  outputsReady      Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location          Location      @relation(fields: [locationId], references: [id])
+  responsibleUser   User          @relation("ResponsibleUser", fields: [responsibleUserId], references: [id])
+  lineup            LineupItem[]
+
+  @@index([organizationId, date, time])
+  @@index([responsibleUserId])
+}
+
+model LineupItem {
+  id        String         @id @default(cuid())
+  serviceId String
+  type      LineupItemType
+  title     String
+  position  Int
+  sourceId  String?
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  service   Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, position])
+  @@index([serviceId])
+}
+
+model Song {
+  id             String            @id @default(cuid())
+  organizationId String
+  title          String
+  author         String?
+  copyright      String?
+  ccli           String?
+  key            String?
+  bpm            Int?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sections       SongSection[]
+  arrangements   SongArrangement[]
+
+  @@index([organizationId, title])
+}
+
+model SongSection {
+  id       String          @id @default(cuid())
+  songId   String
+  type     SongSectionType
+  label    String
+  content  String
+  position Int
+  song     Song            @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, position])
+}
+
+model SongArrangement {
+  id         String   @id @default(cuid())
+  songId     String
+  name       String
+  sectionIds String[]
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, name])
+}

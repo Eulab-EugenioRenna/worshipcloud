@@ -1,0 +1,30 @@
+<div class="shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" routerLink="/dashboard" aria-label="Worship Cloud">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+      <span>Worship</span>
+    </a>
+
+    <nav>
+      @for (item of navigation; track item.path) {
+        <a
+          class="nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="nav-item-active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+        >
+          <span class="nav-icon" [attr.data-icon]="item.icon" aria-hidden="true"></span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <main class="content">
+    <ng-content />
+  </main>
+</div>
