@@ -10,28 +10,34 @@ Cloud application for planning services and running live worship presentations.
 - `packages/shared/dto`: shared API contracts
 - `prisma`: PostgreSQL schema and migrations
 
-## Local setup
+## Docker setup
 
-Use the Node version declared in `.nvmrc`.
+The complete application runs in Docker. No application image is built: the
+official Node image mounts the workspace and a persistent `node_modules` volume,
+while Nginx serves the Angular output mounted from `dist/apps/web/browser`.
 
 ```sh
-nvm use
-npm install
 cp .env.example .env
 npm run infra:up
-npm run db:generate
-npm run db:migrate
 ```
 
-Start the applications in separate terminals:
+`infra:up` installs dependencies inside the volume only when `package-lock.json`
+changes, applies database migrations, starts the NestJS API, and keeps the
+Angular build in watch mode. Source changes are rebuilt into the mounted `dist`
+directory, so they never require a Docker image rebuild.
 
-```sh
-npm run start:api
-npm run start:web
-```
+- Application: `http://localhost:8080`
+- API health through Nginx: `http://localhost:8080/api/v1/health`
 
-- Web: `http://localhost:4200`
-- API health: `http://localhost:3333/api/v1/health`
+Set `RESEND_API_KEY` in `.env`; the file is ignored by Git. To stop the stack,
+run `npm run infra:down`. Named volumes preserve dependencies, PostgreSQL data,
+and Redis data. Nx runtime state is isolated per container start so API and web
+watch processes cannot reuse interrupted task state.
+
+## Host development
+
+Use the Node version declared in `.nvmrc` only if you want to run Nx directly on
+the host.
 
 ## Verification
 

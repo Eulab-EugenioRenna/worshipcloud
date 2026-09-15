@@ -11,7 +11,8 @@
     "lint": "nx run-many -t lint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "infra:up": "docker compose up -d",
+    "db:deploy": "prisma migrate deploy",
+    "infra:up": "sh scripts/docker-up.sh",
     "infra:down": "docker compose down"
   },
   "private": true,
