@@ -1,0 +1,91 @@
+<header class="page-header">
+  <div>
+    <p class="eyebrow">RUN OF SHOW</p>
+    <h1>Services</h1>
+    <p>Every room starts with a deliberate sequence.</p>
+  </div>
+  <button class="create" type="button" (click)="showCreate.set(!showCreate())">
+    {{ showCreate() ? 'Close' : '+ New service' }}
+  </button>
+</header>
+@if (showCreate()) {
+<section class="create-panel">
+  <div>
+    <p class="eyebrow">NEW SERVICE</p>
+    <h2>Set the room in motion.</h2>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="create()">
+    <label
+      >Service name<input
+        formControlName="title"
+        placeholder="Sunday Morning Worship"
+    /></label>
+    <div class="fields">
+      <label>Date<input type="date" formControlName="date" /></label
+      ><label>Time<input type="time" formControlName="time" /></label>
+    </div>
+    <div class="fields">
+      <label
+        >Location<worship-select
+          formControlName="locationId"
+          [options]="locationOptions()"
+          placeholder="Select location" /></label
+      ><label
+        >Responsible<worship-select
+          formControlName="responsibleUserId"
+          [options]="memberOptions()"
+          placeholder="Select member"
+      /></label>
+    </div>
+    <label
+      >Notes<textarea
+        formControlName="notes"
+        placeholder="Call times, special instructions, pastor notes…"
+      ></textarea></label
+    >@if (error()) {
+    <p class="error">{{ error() }}</p>
+    }<button class="submit" type="submit" [disabled]="creating()">
+      {{ creating() ? 'Creating…' : 'Create service' }}
+    </button>
+  </form>
+</section>
+} @if (liveError()) {
+<p class="live-error" role="alert">{{ liveError() }}</p>
+}
+<section class="service-grid">
+  @for (service of services(); track service.id) {
+  <article class="service-card">
+    <div class="date">
+      <span>{{ service.date | date:'EEE' }}</span
+      ><b>{{ service.date | date:'dd' }}</b
+      ><small>{{ service.date | date:'MMM' }}</small>
+    </div>
+    <div class="service-content">
+      <p>{{ service.time }} · {{ service.status }}</p>
+      <h2>{{ service.title }}</h2>
+      <div class="readiness">
+        <span [class.on]="service.readiness.team">T</span
+        ><span [class.on]="service.readiness.media">M</span
+        ><span [class.on]="service.readiness.presentation">P</span
+        ><span [class.on]="service.readiness.outputs">O</span>
+      </div>
+    </div>
+    <div class="service-actions">
+      <a [routerLink]="['/services', service.id]">Modifica</a
+      ><button
+        type="button"
+        (click)="goLive(service.id)"
+        [disabled]="startingServiceId() !== null"
+      >
+        {{ startingServiceId() === service.id ? 'Avvio…' : 'Vai live' }}
+      </button>
+    </div>
+  </article>
+  } @empty {
+  <div class="empty">
+    <p class="eyebrow">NO RUN OF SHOW YET</p>
+    <h2>Build your first service.</h2>
+    <p>Start with a date, a room and the person who carries it.</p>
+  </div>
+  }
+</section>

@@ -17,11 +17,21 @@
           routerLinkActive="nav-item-active"
           [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
         >
-          <span class="nav-icon" [attr.data-icon]="item.icon" aria-hidden="true"></span>
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            @for (path of item.iconPaths; track path) { <path [attr.d]="path" /> }
+          </svg>
           <span>{{ item.label }}</span>
         </a>
       }
     </nav>
+
+    @if (userName) {
+      <footer class="session">
+        <span class="avatar" aria-hidden="true">{{ userName.slice(0, 1) }}</span>
+        <span class="identity"><b>{{ userName }}</b><small>{{ organizationName ?? 'Workspace' }}</small></span>
+        <button type="button" (click)="logoutRequested.emit()">Sign out</button>
+      </footer>
+    }
   </aside>
 
   <main class="content">

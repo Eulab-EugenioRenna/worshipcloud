@@ -1,0 +1,6 @@
+<div class="backdrop" (click)="cancelled.emit()">
+  <section class="dialog" role="alertdialog" aria-modal="true" [attr.aria-label]="title" (click)="$event.stopPropagation()">
+    <p class="eyebrow">PLEASE CONFIRM</p><h2>{{ title }}</h2><p class="description">{{ description }}</p>
+    <footer><button type="button" class="quiet" [disabled]="pending" (click)="cancelled.emit()">Cancel</button><button type="button" class="confirm" [class.destructive]="destructive" [disabled]="pending" (click)="confirmed.emit()">{{ pending ? 'Working…' : confirmLabel }}</button></footer>
+  </section>
+</div>

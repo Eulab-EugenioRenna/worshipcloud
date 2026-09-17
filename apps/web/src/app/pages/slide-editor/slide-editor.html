@@ -1,0 +1,12 @@
+<header>
+  <a routerLink="/library">← Library</a>
+  <div><p>SLIDE CANVAS</p><input [value]="name()" (input)="name.set($any($event.target).value)" aria-label="Slide name" /></div>
+  <button type="button" (click)="save()" [disabled]="saving() || !name().trim()">{{ saving() ? 'Saving…' : 'Save slide' }}</button>
+</header>
+
+@if (slide()) {
+  <main><worship-canvas-editor [layout]="layout()" (layoutChange)="layout.set($event)" /></main>
+} @else if (!error()) {
+  <p class="empty">Loading slide…</p>
+}
+@if (error(); as message) { <p class="error">{{ message }}</p> }

@@ -63,3 +63,6 @@ Thumbs.db
 
 # Generated Prisma client
 apps/api/src/generated/prisma/
+
+# Local song databases and downloaded catalogues
+/songdb/

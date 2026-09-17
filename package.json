@@ -12,6 +12,10 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "test:e2e:core": "node scripts/e2e-core.mjs",
+    "test:bible-xml": "nx build shared-dto && node scripts/check-bible-xml-import.mjs",
+    "test:canvas-runtime": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false nx build shared-dto && node --experimental-strip-types scripts/check-canvas-runtime.mts",
+    "test:import-boundaries": "node --experimental-strip-types scripts/check-import-boundaries.mjs",
     "infra:up": "sh scripts/docker-up.sh",
     "infra:down": "docker compose down"
   },
@@ -59,7 +63,7 @@
     "webpack-dev-server": "^5.2.1"
   },
   "workspaces": [
-    "packages/*",
+    "packages/*/*",
     "apps/*"
   ],
   "dependencies": {
@@ -72,15 +76,22 @@
     "@nestjs/common": "^12.0.3",
     "@nestjs/config": "^12.0.0",
     "@nestjs/core": "^12.0.3",
+    "@nestjs/jwt": "^12.0.2",
     "@nestjs/platform-express": "^12.0.3",
+    "@nestjs/platform-socket.io": "^12.0.3",
+    "@nestjs/websockets": "^12.0.3",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
     "pg": "^8.23.0",
+    "redis": "^4.7.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "~7.8.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "zod": "^4.6.5",
     "zone.js": "0.16.2"
   }
 }

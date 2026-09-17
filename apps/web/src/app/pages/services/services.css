@@ -1,0 +1,252 @@
+:host {
+  display: block;
+  padding: 2.5rem clamp(1.25rem, 4vw, 4rem) 4rem;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: #9db859;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.page-header h1,
+.create-panel h2,
+.empty h2 {
+  margin: 0;
+  color: #f2f4ed;
+  font-family: Georgia, serif;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 400;
+  letter-spacing: -0.07em;
+}
+.page-header > div > p:last-child {
+  margin: 0.75rem 0 0;
+  color: #899183;
+  font-size: 0.85rem;
+}
+.create {
+  min-height: 2.7rem;
+  padding: 0 1rem;
+  border: 1px solid #c3f04a;
+  border-radius: 0.25rem;
+  background: #c3f04a;
+  color: #18200f;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+.create-panel {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.65fr) minmax(18rem, 1fr);
+  gap: 2rem;
+  margin: 2rem 0;
+  padding: 1.6rem;
+  border: 1px solid #3b4629;
+  border-radius: 0.55rem;
+  background: #151a11;
+}
+.create-panel h2 {
+  font-size: 2.3rem;
+}
+.create-panel form {
+  display: grid;
+  gap: 0.9rem;
+}
+label {
+  display: grid;
+  gap: 0.4rem;
+  color: #bac3af;
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+input,
+select,
+textarea {
+  min-width: 0;
+  padding: 0.76rem 0.8rem;
+  border: 1px solid #343b2c;
+  border-radius: 0.25rem;
+  outline: 0;
+  background: #0d100b;
+  color: #f3f5ee;
+  font-size: 0.82rem;
+}
+textarea {
+  min-height: 4rem;
+  resize: vertical;
+}
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.submit {
+  min-height: 2.7rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: #c3f04a;
+  color: #18200f;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+.submit:disabled {
+  opacity: 0.5;
+}
+.error {
+  margin: 0;
+  color: #ff957f;
+  font-size: 0.75rem;
+}
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+.service-card {
+  display: grid;
+  grid-template-columns: 3.7rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  min-height: 8rem;
+  padding: 1rem;
+  border: 1px solid #242b20;
+  border-radius: 0.45rem;
+  background: #10130f;
+}
+.date {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  height: 4.6rem;
+  border: 1px solid #303b24;
+  border-radius: 0.32rem;
+  background: #171d13;
+}
+.date span,
+.date small {
+  color: #93a483;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.date b {
+  color: #eaf2d8;
+  font-family: Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1;
+}
+.service-content p {
+  margin: 0 0 0.35rem;
+  color: #7e8973;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+.service-content h2 {
+  margin: 0;
+  color: #eff3e8;
+  font-size: 1rem;
+  font-weight: 650;
+}
+.readiness {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.8rem;
+}
+.readiness span {
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  border: 1px solid #394133;
+  border-radius: 50%;
+  color: #596052;
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+.readiness span.on {
+  border-color: #c3f04a;
+  color: #c3f04a;
+}
+.service-actions {
+  display: grid;
+  justify-items: stretch;
+  gap: 0.45rem;
+  min-width: 5.5rem;
+}
+.service-actions a,
+.service-actions button {
+  display: grid;
+  min-height: 2rem;
+  place-items: center;
+  padding: 0 0.7rem;
+  border: 1px solid #35402b;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: #aabd90;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.service-actions button {
+  border-color: #c3f04a;
+  background: #c3f04a;
+  color: #17200e;
+}
+.service-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.live-error {
+  margin: 1.5rem 0 0;
+  padding: 0.8rem 1rem;
+  border-left: 2px solid #ff957f;
+  background: #19110f;
+  color: #ffb2a1;
+  font-size: 0.76rem;
+}
+.empty {
+  grid-column: 1/-1;
+  padding: 3rem;
+  border: 1px dashed #36402c;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 2.1rem;
+}
+.empty > p:last-child {
+  color: #818a79;
+  font-size: 0.8rem;
+}
+@media (max-width: 700px) {
+  .page-header {
+    flex-direction: column;
+  }
+  .create-panel {
+    grid-template-columns: 1fr;
+  }
+  .fields {
+    grid-template-columns: 1fr;
+  }
+  .service-card {
+    grid-template-columns: 3.7rem 1fr;
+  }
+  .service-actions {
+    grid-column: 1/-1;
+    grid-template-columns: 1fr 1fr;
+  }
+}

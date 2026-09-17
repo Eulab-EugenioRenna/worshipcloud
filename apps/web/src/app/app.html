@@ -1,3 +1,7 @@
-<worship-app-shell>
+@if (isStandaloneRoute) {
   <router-outlet />
-</worship-app-shell>
+} @else {
+  <worship-app-shell [userName]="auth.currentUser()?.name ?? null" [organizationName]="auth.session()?.memberships?.[0]?.organizationName ?? null" (logoutRequested)="logout()">
+    <router-outlet />
+  </worship-app-shell>
+}

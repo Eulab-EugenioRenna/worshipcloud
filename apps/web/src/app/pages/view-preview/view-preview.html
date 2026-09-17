@@ -1,0 +1,2 @@
+<header><a routerLink="/settings/views">← Views</a>@if (template(); as current) { <div><p>LAYOUT PREVIEW</p><h1>{{ current.name }}</h1><span>{{ current.kind }} · {{ current.target }}</span></div> }</header>
+@if (cue(); as previewCue) { @if (template(); as current) { <main><worship-live-canvas [cue]="previewCue" [target]="current.target" /></main> } } @else if (failed()) { <p class="failed">This layout is no longer available.</p> } @else { <p class="loading">Loading preview…</p> }

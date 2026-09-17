@@ -15,7 +15,7 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/shared/dto",
+        "outputPath": "packages/shared/dto/dist",
         "main": "packages/shared/dto/src/index.ts",
         "tsConfig": "packages/shared/dto/tsconfig.lib.json",
         "assets": []

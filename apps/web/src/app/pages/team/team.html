@@ -1,0 +1,15 @@
+<header><div><p class="eyebrow">PEOPLE ON CALL</p><h1>Your<br /><em>call times.</em></h1><span>Respond clearly so the room can plan around you.</span></div><a routerLink="/services">Open service calendar ↗</a></header>
+
+<section class="assignments" aria-label="Your service assignments">
+  @for (assignment of assignments(); track assignment.id) {
+    <article [class.accepted]="assignment.status === 'Accepted'" [class.attention]="assignment.status === 'Pending'">
+      <div class="date"><b>{{ assignment.serviceDate | date:'dd' }}</b><span>{{ assignment.serviceDate | date:'MMM' }}</span></div>
+      <div class="details"><p>{{ assignment.status }}</p><h2>{{ assignment.serviceTitle }}</h2><span>{{ assignment.role }} · {{ assignment.serviceTime }}</span>@if (assignment.note) { <small>{{ assignment.note }}</small> }</div>
+      <div class="actions">
+        @if (assignment.status !== 'Accepted') { <button type="button" class="accept" (click)="setStatus(assignment, 'Accepted')" [disabled]="changingId() === assignment.id">Accept</button> }
+        @if (assignment.status !== 'Declined') { <button type="button" (click)="setStatus(assignment, 'Declined')" [disabled]="changingId() === assignment.id">Decline</button> }
+        @if (assignment.status !== 'Unavailable') { <button type="button" (click)="setStatus(assignment, 'Unavailable')" [disabled]="changingId() === assignment.id">Unavailable</button> }
+      </div>
+    </article>
+  } @empty { <div class="empty"><p>NO CALL TIMES YET</p><h2>Nothing has your name on it.</h2><span>When a leader adds you to a service, your response controls the team’s readiness.</span></div> }
+</section>

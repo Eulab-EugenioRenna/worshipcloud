@@ -1,0 +1,355 @@
+<header class="top">
+  <a routerLink="/dashboard">← Services</a>
+  @if (service(); as item) {
+  <div>
+    <p>RUN OF SHOW</p>
+    <h1>{{ item.title }}</h1>
+  </div>
+  }
+</header>
+
+@if (service(); as item) {
+<main>
+  <section class="run-sheet">
+    <div class="section-head">
+      <div>
+        <p>RUN OF SHOW</p>
+        <h2>
+          {{ item.lineup.length }} cue{{ item.lineup.length === 1 ? '' : 's' }}
+        </h2>
+      </div>
+    </div>
+    <div class="lineup">
+      @for (cue of item.lineup; track cue.id) {
+      <article>
+        <span class="index">{{ cue.position + 1 | number:'2.0' }}</span
+        ><span class="kind">{{ cue.type }}</span
+        ><strong>{{ cue.title }}</strong>
+        <div class="cue-actions">
+          <span class="reorder"
+            ><button
+              type="button"
+              (click)="moveCue(cue, -1)"
+              [disabled]="cue.position === 0"
+              aria-label="Move cue up"
+            >
+              ↑</button
+            ><button
+              type="button"
+              (click)="moveCue(cue, 1)"
+              [disabled]="cue.position === item.lineup.length - 1"
+              aria-label="Move cue down"
+            >
+              ↓
+            </button></span
+          ><button type="button" class="scene" (click)="beginEditCue(cue)">
+            Edit</button
+          ><button
+            type="button"
+            class="scene"
+            (click)="duplicateCue(cue)"
+            [disabled]="duplicatingCueId() !== null"
+          >
+            {{ duplicatingCueId() === cue.id ? 'Copying…' : 'Duplicate' }}</button
+          ><button type="button" class="scene" (click)="editCueScene(cue)">
+            Views</button
+          ><button
+            type="button"
+            class="delete-cue"
+            (click)="askRemoveCue(cue.id, cue.title)"
+            aria-label="Remove cue"
+          >
+            ×
+          </button>
+        </div>
+      </article>
+      } @empty {
+      <p class="empty">The room is quiet. Add your first cue.</p>
+      }
+    </div>
+  </section>
+
+  <aside>
+    <p>{{ editingCue() ? 'EDIT CUE' : 'ADD TO RUN SHEET' }}</p>
+    <form [formGroup]="cueForm" (ngSubmit)="addCue()">
+      <label
+        >Type<worship-select
+          formControlName="type"
+          [options]="cueTypeOptions()"
+          [disabled]="savingCue()"
+          (selectionChange)="chooseCueType($any($event))"
+      /></label>
+      @if (cueType() === 'Bible' && !editingCue()) {
+      <div class="bible-picker" [formGroup]="bibleSelection">
+        <label
+          >Translation<worship-select
+            formControlName="translationId"
+            [options]="bibleTranslationOptions()"
+            placeholder="Select translation"
+            [disabled]="savingCue()"
+            (selectionChange)="chooseBibleTranslation($any($event))"
+        /></label>
+        <div class="bible-reference-row">
+          <label
+            >Quick reference<input
+              formControlName="reference"
+              placeholder="Gv3:16 or Gv 3"
+              [disabled]="savingCue() || !bibleSelection.controls.translationId.value"
+              (input)="setBibleReference($any($event.target).value)"
+              (blur)="loadBiblePreview()"
+              (keyup.enter)="loadBiblePreview()"
+          /></label>
+          <button
+            type="button"
+            (click)="loadBiblePreview()"
+            [disabled]="savingCue() || loadingBiblePreview() || !bibleSelection.controls.reference.value.trim()"
+          >
+            {{ loadingBiblePreview() ? 'Loading…' : 'Preview' }}
+          </button>
+        </div>
+        <span class="bible-divider">or choose the passage</span>
+        <label
+          >Book<worship-select
+            formControlName="book"
+            [options]="bibleBookOptions()"
+            placeholder="Select book"
+            [disabled]="savingCue() || !bibleSelection.controls.translationId.value"
+            (selectionChange)="chooseBibleBook($any($event))"
+        /></label>
+        <label
+          >Chapter<worship-select
+            formControlName="chapter"
+            [options]="bibleChapterOptions()"
+            placeholder="Select chapter"
+            [disabled]="savingCue() || !bibleSelection.controls.book.value"
+            (selectionChange)="chooseBibleChapter($any($event))"
+        /></label>
+        <div class="bible-verse-range">
+          <label
+            >From verse<worship-select
+              formControlName="verseStart"
+              [options]="bibleVerseOptions()"
+              placeholder="Whole chapter"
+              [disabled]="savingCue() || !bibleSelection.controls.chapter.value"
+              (selectionChange)="chooseBibleVerseStart($any($event))"
+          /></label>
+          <label
+            >To verse<worship-select
+              formControlName="verseEnd"
+              [options]="bibleVerseOptions()"
+              placeholder="Same verse"
+              [disabled]="savingCue() || !bibleSelection.controls.verseStart.value"
+              (selectionChange)="chooseBibleVerseEnd($any($event))"
+          /></label>
+        </div>
+        @if (biblePreview(); as passage) {
+        <section class="bible-preview" aria-label="Bible verse previews">
+          <header>
+            <strong>{{ passage.reference }}</strong
+            ><span
+              >{{ passage.verses.length }} verse{{ passage.verses.length === 1 ?
+              '' : 's' }}</span
+            >
+          </header>
+          <div class="bible-preview-grid">
+            @for (verse of passage.verses; track verse.id) {
+            <article class="bible-verse-preview">
+              <small
+                >{{ passage.book }} {{ passage.chapter }}:{{ verse.verse
+                }}</small
+              >
+              <p>{{ verse.text }}</p>
+            </article>
+            }
+          </div>
+        </section>
+        }
+      </div>
+      } @else if (hasSource() && cueType() !== 'Bible') {
+      <label
+        >Library source<worship-select
+          formControlName="sourceId"
+          [options]="sourceSelectOptions()"
+          placeholder="Select source"
+          [disabled]="savingCue()"
+          (selectionChange)="selectSource($any($event))"
+      /></label>
+      } @if (cueType() === 'Song' && songLocalesForSelectedSource().length) {
+      <label
+        >Output language<worship-select
+          formControlName="contentLocale"
+          [options]="songLocaleOptions()"
+          placeholder="Original language"
+          [disabled]="savingCue()"
+      /></label>
+      } @else if (cueType() === 'Bible') {
+      <label
+        >Output language<input
+          formControlName="contentLocale"
+          placeholder="Original or generated locale"
+          [disabled]="savingCue()"
+      /></label>
+      }
+      <label
+        >Title<input
+          formControlName="title"
+          placeholder="Welcome / Scripture / Message"
+          [disabled]="savingCue()" /></label
+      ><label
+        >Notes<textarea
+          formControlName="notes"
+          placeholder="Optional operator note"
+          [disabled]="savingCue()"
+        ></textarea>
+      </label>
+      <div class="cue-form-actions">
+        <button
+          type="button"
+          class="mr-2"
+          (click)="cancelCueEdit()"
+          [disabled]="!editingCue() || savingCue()"
+        >
+          Cancel</button
+        ><button
+          type="submit"
+          [disabled]="savingCue() || cueForm.invalid || (cueType() === 'Bible' && !editingCue() ? !hasBibleSelection() : (hasSource() && !cueForm.controls.sourceId.value))"
+        >
+          {{ savingCue() ? 'Saving…' : (editingCue() ? 'Save cue' : 'Add cue')
+          }}
+        </button>
+      </div>
+    </form>
+    @if (error()) {
+    <p class="error">{{ error() }}</p>
+    }
+  </aside>
+
+  <section class="team-panel">
+    <div class="section-head">
+      <div>
+        <p>TEAM</p>
+        <h2>{{ assignments().length }} on call</h2>
+      </div>
+    </div>
+    <div class="assignment-list">
+      @for (assignment of assignments(); track assignment.id) {
+      <div>
+        <span
+          ><b>{{ assignment.userName }}</b
+          ><small>{{ assignment.role }} · {{ assignment.status }}</small></span
+        ><button
+          type="button"
+          (click)="askRemoveAssignment(assignment.id, assignment.userName)"
+          [disabled]="removingAssignmentId() !== null"
+          aria-label="Remove assignment"
+        >
+          {{ removingAssignmentId() === assignment.id ? '…' : '×' }}
+        </button>
+      </div>
+      } @empty {
+      <p class="empty">No team has been assigned.</p>
+      }
+    </div>
+    <form class="team-form" [formGroup]="teamForm" (ngSubmit)="assignMember()">
+      <label
+        >Member<worship-select
+          formControlName="userId"
+          [options]="memberOptions()"
+          placeholder="Select member"
+          [disabled]="savingAssignment()" /></label
+      ><label
+        >Role<input
+          formControlName="role"
+          placeholder="Presentation"
+          [disabled]="savingAssignment()" /></label
+      ><button
+        type="submit"
+        [disabled]="teamForm.invalid || savingAssignment()"
+      >
+        {{ savingAssignment() ? 'Assigning…' : 'Assign member' }}
+      </button>
+    </form>
+  </section>
+</main>
+} @if (activeCue(); as cue) {
+<section class="scene-editor" aria-label="Cue views editor">
+  <header>
+    <div>
+      <p>VIEWS · {{ cue.type }} CUE</p>
+      <h2>{{ cue.title }}</h2>
+    </div>
+    <button type="button" (click)="closeCueSceneEditor()">Close</button>
+  </header>
+  <div class="scene-tabs">
+    <button
+      type="button"
+      [class.selected]="!activeVisualSceneId()"
+      (click)="newVisualScene()"
+    >
+      New view</button
+    >@for (scene of visualScenes(); track scene.id) {
+    <button
+      type="button"
+      [class.selected]="activeVisualSceneId() === scene.id"
+      (click)="selectVisualScene(scene)"
+    >
+      {{ scene.name }}
+    </button>
+    }
+  </div>
+  <label class="scene-name"
+    >View name<input
+      [value]="visualSceneName()"
+      (input)="setVisualSceneName($any($event.target).value)"
+  /></label>
+  <div class="target-tabs">
+    @for (target of ['Main', 'Stage', 'Prompter', 'Alpha']; track target) {
+    <button
+      type="button"
+      [class.selected]="visualTarget() === target"
+      (click)="chooseVisualTarget($any(target))"
+    >
+      {{ target }}
+    </button>
+    }
+  </div>
+  <label class="scene-name"
+    >Layout<worship-select
+      [value]="activeVisualTemplateId()"
+      [options]="visualLayoutOptions()"
+      placeholder="Choose a Settings layout"
+      (selectionChange)="selectVisualTemplate($any($event))"
+  /></label>
+  <worship-canvas-editor
+    [layout]="visualLayout()"
+    [lyricPreview]="cue.type === 'Song' ? 'Lyrics from the selected song section' : cue.title"
+    mode="position"
+    (layoutChange)="setVisualLayout($event)"
+  />
+  <footer>
+    <button
+      type="button"
+      class="remove"
+      (click)="askRemoveVisualScene()"
+      [disabled]="!activeVisualSceneId() || savingVisualScene()"
+    >
+      Delete view</button
+    ><button
+      type="button"
+      (click)="saveVisualScene()"
+      [disabled]="savingVisualScene()"
+    >
+      {{ savingVisualScene() ? 'Saving…' : 'Save view' }}
+    </button>
+  </footer>
+</section>
+} @if (confirmation(); as choice) {
+<worship-confirmation-dialog
+  [title]="choice.kind === 'cue' ? 'Remove this cue?' : (choice.kind === 'view' ? 'Remove this view?' : 'Remove this team assignment?')"
+  [description]="choice.kind === 'cue' ? choice.label + ' will be removed from the run sheet.' : (choice.kind === 'view' ? choice.label + ' will be removed from this cue.' : choice.label + ' will no longer be assigned to this service.')"
+  confirmLabel="Remove"
+  [destructive]="true"
+  (cancelled)="confirmation.set(null)"
+  (confirmed)="confirmRemoval()"
+/>
+}

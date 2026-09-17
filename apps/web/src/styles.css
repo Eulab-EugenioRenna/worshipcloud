@@ -19,3 +19,76 @@ select,
 textarea {
   font: inherit;
 }
+
+/* Workspaces use the available screen beside the fixed sidebar. */
+app-song-editor-page main,
+app-slide-editor-page main,
+app-library-page .workspace,
+app-bible-page header,
+app-bible-page .search-panel,
+app-bible-page .passage,
+app-bible-page .translated-passage,
+app-team-page header,
+app-team-page .assignments,
+app-notifications-page header,
+app-notifications-page section {
+  max-width: none !important;
+}
+
+/* A song slide can place a layout, while structural editing belongs to Views. */
+worship-canvas-editor .position-only .surface-size,
+worship-canvas-editor .position-only .add,
+worship-canvas-editor .position-only aside > p:nth-of-type(2),
+worship-canvas-editor .position-only .inspector > label,
+worship-canvas-editor .position-only .remove {
+  display: none;
+}
+
+/* Song editing owns pagination only; Settings owns every visual layout decision. */
+worship-canvas-editor .pagination-only .surface {
+  pointer-events: none;
+}
+worship-canvas-editor .pagination-only .surface-size,
+worship-canvas-editor .pagination-only .add,
+worship-canvas-editor .pagination-only aside > p:nth-of-type(2),
+worship-canvas-editor .pagination-only .presets,
+worship-canvas-editor .pagination-only .measure,
+worship-canvas-editor .pagination-only .remove,
+worship-canvas-editor .pagination-only .font-choice {
+  display: none;
+}
+
+app-live-control-page .fixed-step-grid {
+  grid-template-columns: repeat(auto-fill, 15rem);
+  justify-content: start;
+}
+app-live-control-page .fixed-step-grid .step-card {
+  width: 15rem;
+}
+
+app-live-control-page .preview-target {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  color: #9aa48e;
+  font-size: .72rem;
+}
+app-live-control-page .preview-target worship-select {
+  width: 8.75rem;
+}
+app-live-control-page .shortcut-legend {
+  position: absolute;
+  right: .45rem;
+  bottom: .35rem;
+  display: grid;
+  min-width: 1.45rem;
+  min-height: 1.45rem;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / .5);
+  border-radius: .15rem;
+  background: rgb(0 0 0 / .72);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 900;
+  line-height: 1;
+}

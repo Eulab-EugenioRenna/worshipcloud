@@ -1,0 +1,129 @@
+<header>
+  <div>
+    <p>LYRICS LIBRARY</p>
+    <h1>Songs</h1>
+    <span>Words ready for every screen.</span>
+  </div>
+  <div class="header-actions">
+    <input
+      #songImport
+      type="file"
+      accept="application/json,.json"
+      (change)="importFile($any($event.target))"
+    />
+    <button
+      type="button"
+      class="secondary"
+      (click)="songImport.click()"
+      [disabled]="importing()"
+    >
+      Import JSON
+    </button>
+    <button
+      type="button"
+      class="secondary"
+      (click)="showImport.set(!showImport())"
+      [disabled]="importing()"
+    >
+      {{ showImport() ? 'Close import' : 'Import from service' }}</button
+    ><button type="button" (click)="showCreate.set(!showCreate())">
+      {{ showCreate() ? 'Close' : '+ New song' }}
+    </button>
+  </div>
+</header>
+@if (createError() && !showCreate()) {
+<p class="form-error import-error" role="alert">{{ createError() }}</p>
+} @if (showImport()) {
+<form
+  class="remote-import"
+  [formGroup]="importForm"
+  (ngSubmit)="importRemote()"
+>
+  <div>
+    <p>IMPORT SOURCE</p>
+    <span
+      >Configured APIs keep credentials on the server. Public URLs must return
+      the canonical songs JSON contract.</span
+    >
+  </div>
+  <label
+    >Provider<worship-select
+      formControlName="sourceId"
+      [options]="importSourceOptions()"
+      placeholder="Select source"
+      (selectionChange)="$any($event) ? chooseImportSource($any($event)) : usePublicUrl()" /></label
+  >@if (selectedImportSource(); as source) { @if (source.requiresResource) {
+  <label
+    >Resource<input
+      formControlName="resource"
+      placeholder="Catalog or collection id"
+    /><small>{{ source.description }}</small></label
+  >
+  } } @else {
+  <label
+    >Public JSON URL<input
+      type="url"
+      formControlName="url"
+      placeholder="https://raw.githubusercontent.com/.../songs.json"
+  /></label>
+  }<button type="submit" [disabled]="importing()">
+    {{ importing() ? 'Importing…' : 'Import songs' }}
+  </button>
+</form>
+} @if (showCreate()) {
+<form class="new-song" [formGroup]="form" (ngSubmit)="create()">
+  <label
+    >Title<input formControlName="title" placeholder="Santo per sempre" />@if
+    (form.controls.title.touched && form.controls.title.invalid) {
+    <small>Title is required.</small> }</label
+  ><label
+    >Language<worship-select
+      formControlName="locale"
+      [options]="languageOptions"
+      placeholder="Select language" /></label
+  ><label
+    >Author<input
+      formControlName="author"
+      placeholder="Author / publisher" /></label
+  ><label
+    >Key <small>optional</small
+    ><input formControlName="key" placeholder="E" /></label
+  ><label
+    >BPM <small>optional</small
+    ><input
+      type="number"
+      min="20"
+      formControlName="bpm"
+      placeholder="e.g. 72" /></label
+  >@if (createError()) {
+  <p class="form-error" role="status">{{ createError() }}</p>
+  }<button type="submit" [disabled]="creating() || form.invalid">
+    {{ creating() ? 'Saving…' : 'Add to library' }}
+  </button>
+</form>
+}
+<section class="library">
+  <input
+    class="search"
+    [value]="query()"
+    (input)="search($any($event.target).value)"
+    placeholder="Search title or author"
+  />
+  <div class="songs">
+    @for (song of songs(); track song.id) {
+    <a [routerLink]="['/songs', song.id]"
+      ><div class="wave"><i></i><i></i><i></i><i></i></div>
+      <div>
+        <p>
+          {{ song.locale }} · {{ song.key ?? '—' }} · {{ song.bpm ?? '—' }} BPM
+        </p>
+        <h2>{{ song.title }}</h2>
+        <span>{{ song.author ?? 'No author assigned' }}</span>
+      </div>
+      <b>{{ song.sections.length }}</b></a
+    >
+    } @empty {
+    <p class="empty">Your lyric library is waiting for its first song.</p>
+    }
+  </div>
+</section>

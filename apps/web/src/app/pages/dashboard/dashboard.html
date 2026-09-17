@@ -1,42 +1,99 @@
 <header class="page-header">
   <div>
-    <p class="eyebrow">Worship Cloud</p>
-    <h1>Dashboard</h1>
+    <p class="eyebrow">
+      CONTROL ROOM · {{ auth.session()?.memberships?.[0]?.organizationName ??
+      'Worship Cloud' }}
+    </p>
+    <h1>Good to have you<br /><em>in the room.</em></h1>
   </div>
-
-  <div class="live-actions" aria-label="Live actions">
-    <button type="button" class="button button-secondary" disabled>Prepare Live</button>
-    <button type="button" class="button button-live" disabled>Start Live</button>
+  <div class="live-actions">
+    <a routerLink="/services" class="button button-live"
+      ><span></span> Vai ai servizi</a
+    >
   </div>
 </header>
-
+@if (loading()) {
+<p class="loading">SYNCING THE ROOM…</p>
+} @else {
 <section class="next-service" aria-labelledby="next-service-title">
+  @if (nextService(); as service) {
   <div>
-    <p class="section-label">Next</p>
-    <h2 id="next-service-title">No service scheduled</h2>
+    <p class="section-label">NEXT SERVICE · {{ service.status }}</p>
+    <h2 id="next-service-title">{{ service.title }}</h2>
+    <p class="service-meta">
+      {{ service.date | date:'EEEE, d MMMM' }} · {{ service.time }}
+    </p>
   </div>
-  <button type="button" class="button button-primary" disabled>Create service</button>
+  <a [routerLink]="['/services', service.id]" class="open-service"
+    >Open run sheet <b>↗</b></a
+  >
+  } @else {
+  <div>
+    <p class="section-label">YOUR CANVAS IS READY</p>
+    <h2 id="next-service-title">No service scheduled</h2>
+    <p class="service-meta">
+      Create a service to start preparing your next room.
+    </p>
+  </div>
+  <a routerLink="/services" class="open-service">Create service <b>+</b></a> }
 </section>
-
 <div class="dashboard-grid">
-  <section class="panel" aria-labelledby="recent-services-title">
+  <section class="panel roster">
     <div class="panel-header">
-      <h2 id="recent-services-title">Recent services</h2>
+      <div>
+        <p>YOUR CALL TIMES</p>
+        <h2>Team shifts</h2>
+      </div>
+      <a routerLink="/team">See all</a>
     </div>
-    <p class="empty">No services yet.</p>
+    @for (shift of shifts().slice(0, 3); track shift.id) {
+    <div class="shift">
+      <span class="shift-date">{{ shift.serviceDate | date:'dd' }}</span>
+      <div>
+        <strong>{{ shift.serviceTitle }}</strong
+        ><small>{{ shift.role }} · {{ shift.serviceTime }}</small>
+      </div>
+      <span class="status" [class.accepted]="shift.status === 'Accepted'"
+        >{{ shift.status }}</span
+      >
+    </div>
+    } @empty {
+    <p class="empty">Nothing calling you just yet.</p>
+    }
   </section>
-
-  <section class="panel" aria-labelledby="pending-title">
+  <section class="panel signal">
     <div class="panel-header">
-      <h2 id="pending-title">Pending</h2>
+      <div>
+        <p>ATTENTION</p>
+        <h2>Signals</h2>
+      </div>
+      <span class="unread">{{ unreadCount() }}</span>
     </div>
-    <p class="empty">No shifts to confirm.</p>
+    <div class="signal-main">
+      <b>{{ unreadCount() }}</b
+      ><span>unread notification{{ unreadCount() === 1 ? '' : 's' }}</span>
+    </div>
+    <a routerLink="/notifications">Review notifications →</a>
   </section>
-
-  <section class="panel" aria-labelledby="library-title">
+  <section class="panel service-list">
     <div class="panel-header">
-      <h2 id="library-title">Library</h2>
+      <div>
+        <p>RUN OF SHOW</p>
+        <h2>Upcoming services</h2>
+      </div>
+      <a routerLink="/services">All services</a>
     </div>
-    <p class="empty">No recent media or songs.</p>
+    @for (service of services().slice(0, 3); track service.id) {
+    <a [routerLink]="['/services', service.id]" class="service-row"
+      ><span>{{ service.date | date:'MMM d' }}</span
+      ><strong>{{ service.title }}</strong
+      ><i
+        [class.ready]="service.status === 'Ready' || service.status === 'Live'"
+      ></i
+    ></a>
+    } @empty {
+    <p class="empty">Your service calendar will appear here.</p>
+    }
   </section>
 </div>
+}

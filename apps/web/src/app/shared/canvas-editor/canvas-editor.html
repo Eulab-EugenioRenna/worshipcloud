@@ -1,0 +1,81 @@
+<div class="editor-grid" [class.position-only]="mode === 'position'" [class.pagination-only]="mode === 'pagination'">
+  <section class="surface" #surface [style.aspect-ratio]="aspectRatio()" [style.--editor-ratio]="aspectRatio()" [style.background-color]="backgroundColor()" [style.background-image]="backgroundImage()" (pointermove)="movePointer($event)" (pointerup)="endPointer()" (pointercancel)="endPointer()" (click)="selectedId.set(null)">
+    @if (backgroundVideo(); as url) { <video class="background-media" [src]="url" autoplay loop muted playsinline></video> }
+    @for (element of layout.elements; track element.id) {
+      <div class="element" [class.selected]="selectedId() === element.id" [style.left.%]="display(element).x" [style.top.%]="display(element).y" [style.width.%]="display(element).width" [style.height.%]="display(element).height" [style.z-index]="element.zIndex" [style.color]="$any(element.style).color" [style.background-color]="elementBackground(element)" [style.border]="elementBorder(element)" [style.padding]="elementPadding(element)" [style.font-family]="$any(element.style).fontFamily" [style.--editor-font-size]="$any(element.style).fontSize" [style.text-align]="$any(element.style).textAlign" [style.align-items]="$any(element.style).verticalAlign === 'top' ? 'start' : $any(element.style).verticalAlign === 'bottom' ? 'end' : 'center'" (pointerdown)="beginPointer($event, element, 'move')" (click)="$event.stopPropagation()">
+        @switch (element.type) {
+          @case ('Lyrics') { <span>{{ previewText(element) }}</span> }
+          @case ('Scripture') { <span class="scripture-preview">Perché Dio ha tanto amato il mondo…<small>Giovanni 3:16 (LND)</small></span> }
+          @case ('NextStep') { <article class="next-preview"><small>{{ $any(element.data).label ?? 'NEXT STEP' }}</small><span>Next lyric step</span></article> }
+          @case ('CueTitle') { <span>Song title</span> }
+          @case ('SectionLabel') { <span>{{ $any(element.data).prefix ?? 'CURRENT · ' }}Verse 1</span> }
+          @case ('Text') { <span>{{ $any(element.data).text }}</span> }
+          @case ('Clock') { <span>10:30</span> }
+          @case ('Timer') { <span>10:00</span> }
+          @case ('Shape') { <span class="shape-fill"></span> }
+          @case ('Image') { @if (mediaUrl(element); as url) { <img [src]="url" alt="" /> } @else { <span class="placeholder">Image / cue media</span> } }
+          @case ('Video') { @if (mediaUrl(element); as url) { <video [src]="url" autoplay loop muted playsinline></video> } @else { <span class="placeholder">Video / cue media</span> } }
+          @case ('Logo') { @if (mediaUrl(element); as url) { <img [src]="url" alt="" /> } @else { <span class="placeholder">Logo</span> } }
+        }
+        @if (selectedId() === element.id) { <button type="button" class="resize" aria-label="Resize element" (pointerdown)="beginPointer($event, element, 'resize')"></button> }
+      </div>
+    }
+  </section>
+
+  <aside>
+    <section class="tool-group">
+      <p>VIEW SURFACE</p>
+      <label class="surface-size">Resolution<select [value]="resolutionLabel()" (change)="setResolution($any($event.target).value)"><option value="1920x1080">1920 × 1080 · H</option><option value="1080x1920">1080 × 1920 · V</option><option value="3840x2160">3840 × 2160 · H</option><option value="2160x3840">2160 × 3840 · V</option><option value="1920x1200">1920 × 1200 · H</option><option value="1200x1920">1200 × 1920 · V</option></select></label>
+    </section>
+
+    <section class="tool-group background-controls">
+      <p>BACKGROUND</p>
+      <label>Type<select [value]="backgroundKind()" (change)="setBackgroundKind($any($event.target).value)"><option value="color">Color</option><option value="gradient">Gradient</option><option value="image">Image</option><option value="video">Video</option></select></label>
+      <label>Base color<input type="color" [value]="backgroundColor()" (input)="updateBackground('color', $any($event.target).value)" /></label>
+      @if (backgroundKind() === 'gradient') { <label>CSS gradient<textarea [value]="backgroundGradient()" (input)="updateBackground('gradient', $any($event.target).value)"></textarea></label> }
+      @if (backgroundKind() === 'image' || backgroundKind() === 'video') { <label>Media URL<input [value]="backgroundUrl()" placeholder="https://…" (input)="updateBackground('url', $any($event.target).value)" /></label><small>Background media fills the canvas and remains behind every element.</small> }
+    </section>
+
+    <section class="tool-group">
+      <p>ELEMENTS</p>
+      <div class="add"><button type="button" (click)="add('Lyrics')">Lyrics</button><button type="button" (click)="add('NextStep')">Next step</button><button type="button" (click)="add('CueTitle')">Cue title</button><button type="button" (click)="add('SectionLabel')">Section</button><button type="button" (click)="add('Scripture')">Scripture</button><button type="button" (click)="add('Text')">Text</button><button type="button" (click)="add('Shape')">Shape</button><button type="button" (click)="add('Image')">Image</button><button type="button" (click)="add('Logo')">Logo</button><button type="button" (click)="add('Video')">Video</button><button type="button" (click)="add('Timer')">Timer</button><button type="button" (click)="add('Clock')">Clock</button></div>
+    </section>
+
+    @if (selected(); as element) {
+      <div class="inspector">
+        <p>SELECTED · {{ element.type }}</p>
+        <div class="presets"><button type="button" (click)="applyPreset('center')">Center</button><button type="button" (click)="applyPreset('lowerThird')">Lower third</button><button type="button" (click)="applyPreset('fullWidth')">Full width</button><button type="button" (click)="applyPreset('timerCorner')">Top right</button></div>
+        <div class="measure"><label>X<input type="number" [value]="element.x" (input)="updateNumber('x', $any($event.target).value)" /></label><label>Y<input type="number" [value]="element.y" (input)="updateNumber('y', $any($event.target).value)" /></label><label>W<input type="number" [value]="element.width" (input)="updateNumber('width', $any($event.target).value)" /></label><label>H<input type="number" [value]="element.height" (input)="updateNumber('height', $any($event.target).value)" /></label></div>
+        @if (element.type === 'Lyrics') {
+          <label>Canonical steps per slide<input type="number" min="1" max="20" [value]="lyricStepsPerSlide()" (change)="setLyricStepsPerSlide($any($event.target).value)" /></label><small>This view decides how many canonical steps are visible together.</small>
+          @if (stepGenerator) {
+            <div class="step-generator">
+              <p>CANONICAL STEP GENERATOR</p>
+              <label>Lines per step<input type="number" min="1" max="8" [value]="stepRule('maxLinesPerStep')" (change)="setStepRule('maxLinesPerStep', +$any($event.target).value)" /></label>
+              <label>Characters per line<input type="number" min="10" max="160" [value]="stepRule('maxCharsPerLine')" (change)="setStepRule('maxCharsPerLine', +$any($event.target).value)" /></label>
+              <label>Minimum step characters<input type="number" min="1" max="80" [value]="stepRule('minCharsPerStep')" (change)="setStepRule('minCharsPerStep', +$any($event.target).value)" /></label>
+              <label><input type="checkbox" [checked]="mergeShortLines()" (change)="setStepRule('mergeShortLines', $any($event.target).checked)" /> Merge adjacent short lines</label>
+              <small>Sections are hard boundaries. The generator balances short endings and never joins two sections.</small>
+            </div>
+          }
+          <label>Lyrics flow<select [value]="lyricPaginationMode()" (change)="setLyricPagination($any($event.target).value)"><option value="full">Whole section</option><option value="steps">Fit visible lines</option></select></label>
+          @if (lyricPaginationMode() === 'steps') { <small>Auto-fit uses {{ visibleLyricLineCapacity() }} visual line{{ visibleLyricLineCapacity() === 1 ? '' : 's' }} per step.</small><label>Pages and rows<textarea [value]="lyricPages()" placeholder="1+2+3 / 4+5" (input)="setLyricPages($any($event.target).value)"></textarea></label><label>Manual lines per step<input type="number" min="1" value="2" (change)="splitLyricsEvery($any($event.target).value)" /></label> }
+        }
+        @if (element.type === 'Text') { <label>Text<input [value]="$any(element.data).text" (input)="updateText($any($event.target).value)" /></label> }
+        @if (element.type === 'NextStep') { <label>Label<input [value]="$any(element.data).label ?? 'NEXT STEP'" (input)="updateData('label', $any($event.target).value)" /></label> }
+        @if (element.type === 'SectionLabel') { <label>Prefix<input [value]="$any(element.data).prefix ?? ''" (input)="updateData('prefix', $any($event.target).value)" /></label> }
+        @if (element.type === 'Clock') { <label>Clock format<select [value]="$any(element.data).format ?? 'time'" (change)="updateData('format', $any($event.target).value)"><option value="time">Time</option><option value="date">Date</option><option value="dateTime">Date and time</option></select></label> }
+        @if (element.type === 'Image' || element.type === 'Video' || element.type === 'Logo') { <label>Media URL<input [value]="$any(element.data).url" placeholder="Use the cue media when empty" (input)="updateUrl($any($event.target).value)" /></label> }
+        @if (element.type !== 'Shape' && element.type !== 'Image' && element.type !== 'Video' && element.type !== 'Logo') { <label>Text size<input type="number" min="1" max="20" [value]="$any(element.style).fontSize ?? 4" (input)="updateStyle('fontSize', +$any($event.target).value)" /></label><label>Horizontal alignment<select [value]="$any(element.style).textAlign ?? 'center'" (change)="updateStyle('textAlign', $any($event.target).value)"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label><label>Vertical alignment<select [value]="verticalAlign()" (change)="setVerticalAlign($any($event.target).value)"><option value="top">Top</option><option value="center">Center</option><option value="bottom">Bottom</option></select></label> }
+        <label>Color<input type="color" [value]="$any(element.style).color ?? '#ffffff'" (input)="updateColor($any($event.target).value)" /></label>
+        @if (element.type === 'NextStep') { <label>Panel color<input type="color" [value]="$any(element.style).backgroundColor ?? '#050706'" (input)="updateStyle('backgroundColor', $any($event.target).value)" /></label><label>Border color<input type="color" [value]="$any(element.style).borderColor ?? '#2d3a24'" (input)="updateStyle('borderColor', $any($event.target).value)" /></label><label>Inner spacing<input type="number" min="0" max="10" step=".5" [value]="$any(element.style).padding ?? 2" (input)="updateStyle('padding', +$any($event.target).value)" /></label> }
+        <button type="button" class="remove" (click)="removeSelected()">Remove element</button>
+      </div>
+    } @else { <p class="hint">Select an element, then drag or resize it on the canvas.</p> }
+
+    @if (selected(); as element) {
+      @if (element.type === 'Lyrics' && lyricPaginationMode() === 'steps') { <label class="step-map-choice">Live steps<input [value]="lyricStepMap()" placeholder="1, 3, 5" (change)="setLyricStepMap($any($event.target).value)" /><small>One global Live step per page.</small></label> }
+      @if (element.type !== 'Shape' && element.type !== 'Image' && element.type !== 'Video' && element.type !== 'Logo') { <label class="font-choice">Font<select [value]="fontFamily()" (change)="setFontFamily($any($event.target).value)"><option value="Georgia">Georgia · Editorial</option><option value="system-ui">System · Sans</option><option value="Arial">Arial · Neutral</option><option value="ui-monospace">Mono · Technical</option></select></label> }
+    }
+  </aside>
+</div>

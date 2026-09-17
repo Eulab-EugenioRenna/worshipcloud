@@ -1,0 +1,19 @@
+<main class="auth-shell">
+  <section class="intro">
+    <a class="brand" href="/auth"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>WORSHIP CLOUD</a>
+    <div class="manifesto"><p class="kicker">THE SERVICE, IN SYNC</p><h1>One pulse.<br /><em>Every screen.</em></h1><p>Prepare the room, the team and the stream from one focused control surface.</p></div>
+    <p class="footnote">WEB-FIRST WORSHIP PRESENTATION SYSTEM · V0.1</p>
+  </section>
+  <section class="form-side">
+    <div class="form-wrap">
+      <div class="mode-switch" role="tablist"><button type="button" [class.active]="mode() === 'login'" (click)="setMode('login')" [disabled]="submitting()">Sign in</button><button type="button" [class.active]="mode() === 'register'" (click)="setMode('register')" [disabled]="submitting()">Create space</button></div>
+      @if (mode() === 'login') {
+        <div class="heading"><p>WELCOME BACK</p><h2>Take your place in the room.</h2></div>
+        <form [formGroup]="loginForm" (ngSubmit)="submit()"><label>Email<input type="email" formControlName="email" autocomplete="email" placeholder="you@church.org" /></label><label>Password<input type="password" formControlName="password" autocomplete="current-password" placeholder="Your password" /></label>@if (error()) { <p class="form-error" role="status">{{ error() }}</p> }<button class="submit" type="submit" [disabled]="submitting() || loginForm.invalid">{{ submitting() ? 'Opening…' : 'Enter Worship Cloud' }}</button></form>
+      } @else {
+        <div class="heading"><p>CREATE YOUR SPACE</p><h2>Start with one room.</h2></div>
+        <form [formGroup]="registerForm" (ngSubmit)="submit()"><div class="split"><label>Your name<input formControlName="name" autocomplete="name" placeholder="Andrea Rossi" /></label><label>Organization<input formControlName="organizationName" placeholder="New Hope Church" /></label></div><label>Primary location<input formControlName="locationName" placeholder="Main Hall" /></label><label>Email<input type="email" formControlName="email" autocomplete="email" placeholder="you@church.org" /></label><label>Password<input type="password" formControlName="password" autocomplete="new-password" placeholder="At least 10 characters" /></label>@if (error()) { <p class="form-error" role="status">{{ error() }}</p> }<button class="submit" type="submit" [disabled]="submitting() || registerForm.invalid">{{ submitting() ? 'Creating…' : 'Create Worship Cloud' }}</button></form>
+      }
+    </div>
+  </section>
+</main>

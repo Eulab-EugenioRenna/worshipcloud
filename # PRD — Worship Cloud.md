@@ -1,6 +1,6 @@
 # PRD — Worship Cloud
 
-## 1. Obiettivo
+# 1. Obiettivo
 
 Creare una web app cloud per chiese e worship team che permetta di gestire:
 
@@ -14,10 +14,15 @@ Creare una web app cloud per chiese e worship team che permetta di gestire:
 * più monitor e layout;
 * stage display / gobbo;
 * countdown e orologio;
-* output video professionali come NDI;
+* output HTML fullscreen tramite URL;
+* overlay HTML trasparenti per software di produzione esterni;
 * controllo simultaneo da più dispositivi.
 
-Il prodotto deve essere semplice da usare durante il culto, ma avere funzionalità professionali per regia e streaming.
+Il prodotto deve essere semplice da usare durante il culto, ma adatto anche a regia e streaming professionali.
+
+Worship Cloud è **web-first**. Il sistema distribuisce contenuto e stato realtime; ogni destinazione è una pagina web che effettua localmente il rendering.
+
+La piattaforma non produce frame video e non include motori di rendering video proprietari, agenti locali o dipendenze native.
 
 ---
 
@@ -55,7 +60,7 @@ Può:
 * mandare slide in onda;
 * gestire media;
 * countdown;
-* output video.
+* output web della Live Session.
 
 ### Membro Team
 
@@ -65,9 +70,9 @@ Può:
 * accettare/rifiutare;
 * vedere informazioni del servizio.
 
-### Stage / Gobbo
+### Stage / Prompter
 
-Accesso solo visualizzazione.
+Client web con accesso solo visualizzazione alla Live Session.
 
 ---
 
@@ -281,6 +286,16 @@ Ogni file contiene:
 
 Drag & drop per il caricamento.
 
+Immagini, audio e video vengono salvati nello storage e consumati dal browser tramite URL.
+
+```text
+Storage
+→ asset URL
+→ HTML <img>, <video>, <audio>
+```
+
+Il backend gestisce metadati, permessi e URL. Non decodifica media e non genera video server-side.
+
 ---
 
 # 10. Slide Editor
@@ -338,52 +353,56 @@ Logo
 
 Il contenuto cambia automaticamente mantenendo lo stesso design.
 
----
+CONTENT e LAYOUT devono restare separati. Il contenuto non conosce dimensioni, posizione o stile specifici di un output.
 
-# 12. Live Mode
-
-Schermata principale usata durante il culto.
-
-Layout:
-
-```text
-SERVICE        CUES               PROGRAM
-
-Countdown      Verse 1            Main Preview
-Welcome        Verse 2
-Song           Chorus
-Bible          Bridge
-Sermon
-Closing
-```
-
-Azioni principali:
-
-```text
-Previous
-Next
-Take
-Clear
-Blackout
-Logo
-Pause
-```
+Ogni pagina Live applica al medesimo contenuto il proprio template o layout.
 
 ---
 
-# 13. Preview / Program
+# 12. Live Session web
 
-Due stati separati.
+Ogni Live Session espone pagine HTML temporanee o permanenti raggiungibili tramite URL.
 
-### Preview
+```text
+/live/:sessionId/control
+/live/:sessionId/preview
+/live/:sessionId/main
+/live/:sessionId/stage
+/live/:sessionId/prompter
+/live/:sessionId/alpha
+```
 
-Contenuto che l'operatore sta preparando.
+Tutte le destinazioni leggono lo stesso Live State. Nessuna route riceve un flusso video prodotto dalla piattaforma.
 
-### Program
+Il Live State resta un unico aggregato e distingue solo il contenuto preparato da quello pubblicato. TAKE promuove il contenuto preparato a pubblicato.
 
-Contenuto attualmente visibile al pubblico.
+---
 
-Flusso:
+# 13. Control
+
+Route:
+
+```text
+/live/:sessionId/control
+```
+
+È la console dell'operatore.
+
+Permette:
+
+* gestione scaletta;
+* selezione cue;
+* Verse / Chorus / Bridge;
+* Preview;
+* TAKE;
+* Previous / Next;
+* Clear;
+* Blackout;
+* countdown;
+* clock;
+* controllo della Live Session.
+
+Flusso operativo:
 
 ```text
 Select Cue
@@ -397,103 +416,121 @@ Program
 
 ---
 
-# 14. Multi Monitor
+# 14. Preview e Main
 
-Possibilità di configurare più output.
+## Preview
 
-Esempio:
+Route:
 
 ```text
-Main Screen
-Stage Screen
-Streaming
-Lobby
-Confidence Monitor
+/live/:sessionId/preview
 ```
 
-Ogni output può avere un layout differente.
+Mostra il contenuto preparato che verrà mandato in Program con TAKE.
 
----
+`Program` indica lo stato pubblicato dalla regia. Non è un flusso video e non richiede un motore di output.
 
-# 15. Multi Layout
+## Main
 
-Lo stesso contenuto può essere visualizzato in modo diverso.
-
-Esempio canto.
-
-### Main Screen
+Route:
 
 ```text
-Testo completo
-Background
+/live/:sessionId/main
 ```
 
-### Stage
+È una pagina HTML fullscreen destinata al pubblico.
+
+Supporta:
+
+* lyrics;
+* Bibbia;
+* slide;
+* immagini;
+* video HTML;
+* audio;
+* countdown;
+* clock.
+
+Il Main può essere aperto direttamente in un browser sul monitor collegato tramite HDMI.
 
 ```text
-CURRENT
-
-testo corrente
-
-NEXT
-
-testo successivo
-```
-
-### Streaming
-
-```text
-testo
-
-sfondo trasparente
+Main URL
+→ Browser fullscreen
+→ HDMI
+→ Proiettore / LED / TV
 ```
 
 ---
 
-# 16. Stage Display
+# 15. Multi Output e Multi Layout
 
-Schermata per worship team e palco.
+Lo stesso contenuto può essere aperto su più pagine e interpretato con layout differenti.
+
+```text
+Live State
+├─ Main → testo completo e background
+├─ Stage → current e next
+├─ Prompter → testo e note
+└─ Alpha → overlay trasparente
+```
+
+CONTENT e LAYOUT sono separati.
+
+Il contenuto contiene dati semantici. Ogni output possiede un proprio template con dimensioni, posizione, tipografia, colori e animazioni.
+
+---
+
+# 16. Stage
+
+Route:
+
+```text
+/live/:sessionId/stage
+```
+
+È un client web destinato a worship team e musicisti.
 
 Può mostrare:
 
-* ora;
-* timer;
 * testo corrente;
 * testo successivo;
-* prossimo elemento;
-* messaggi regia.
+* cue corrente;
+* cue successivo;
+* sezione corrente;
+* prossima sezione;
+* clock;
+* countdown;
+* prossimo elemento della scaletta;
+* messaggi inviati dalla regia.
 
-Esempio:
-
-```text
-10:42
-
-CURRENT
-Grande sei Signore
-
-NEXT
-Degno di ogni lode
-
-Next Cue
-BRIDGE
-```
+Stage non riceve video. Riceve dati Live tramite WebSocket e li renderizza localmente nel browser.
 
 ---
 
-# 17. Gobbo
+# 17. Prompter
 
-Modalità dedicata al pastore o relatore.
+Route:
 
-Mostra:
+```text
+/live/:sessionId/prompter
+```
 
-* testo predicazione;
-* slide corrente;
-* slide successiva;
+È il gobbo web per pastore o relatore.
+
+Supporta:
+
+* testo della predicazione;
 * note;
+* versetti;
+* current section;
+* next section;
+* clock;
 * countdown;
-* orologio.
+* messaggi regia;
+* scroll manuale;
+* eventuale auto-scroll.
 
-Accessibile anche da tablet tramite browser.
+Prompter è esclusivamente HTML + WebSocket ed è accessibile anche da tablet.
 
 ---
 
@@ -538,19 +575,19 @@ Esempio:
 
 ```text
 PC Regia
-→ Program Control
+→ /control
 
 MacBook
-→ Producer
+→ /preview
 
 Tablet palco
-→ Stage Display
+→ /stage
 
 iPad Pastore
-→ Gobbo
+→ /prompter
 
 Laptop Streaming
-→ Observer
+→ /alpha in vMix Web Browser Input
 ```
 
 ---
@@ -572,86 +609,106 @@ Accept
 
 ---
 
-# 22. Output video
+# 22. Output web
 
-Output supportati progressivamente:
+Gli output della piattaforma sono esclusivamente pagine HTML raggiungibili tramite URL.
 
 ```text
-Browser Display
-HDMI / Display
-Fullscreen Window
-NDI
-NDI Alpha
-WebRTC
-SRT
-RTMP
+URL → Browser fullscreen → HDMI
+URL → vMix Web Browser Input
+URL → browser su tablet o computer
+```
+
+La piattaforma distribuisce dati e stato realtime. Non distribuisce video e non produce frame.
+
+---
+
+# 23. Alpha e integrazione vMix
+
+Route:
+
+```text
+/live/:sessionId/alpha
+```
+
+È una pagina HTML con background trasparente.
+
+Può visualizzare:
+
+* lyrics;
+* scripture;
+* lower third;
+* nome speaker;
+* titoli;
+* grafiche overlay.
+
+L'integrazione principale con vMix usa Web Browser Input.
+
+```text
+Camere
+→ ATEM Blackmagic
+→ vMix
+
+Worship /alpha URL
+→ vMix Web Browser Input
+→ overlay sopra le camere
+```
+
+Questa integrazione non usa NDI.
+
+---
+
+# 24. Realtime e Live State
+
+Il backend mantiene un unico Live State per sessione.
+
+Il modello contiene solo i dati necessari a Preview e Program. Non duplica contenuti o layout per ogni destinazione.
+
+Quando l'operatore esegue TAKE:
+
+```text
+Control
+→ NestJS
+→ aggiornamento Live State
+→ Redis Pub/Sub
+→ WebSocket
+→ Main / Stage / Prompter / Alpha / Preview
+```
+
+Il backend distribuisce dati e stato, non video.
+
+Esempio di Live State:
+
+```json
+{
+  "type": "song",
+  "title": "Hosanna",
+  "section": "chorus",
+  "lines": [
+    "Osanna, Osanna",
+    "Osanna nell'alto dei cieli"
+  ]
+}
+```
+
+Ogni output interpreta lo stesso dato con il proprio layout.
+
+```text
+Main → testo completo con background
+Stage → current + next
+Prompter → testo + note
+Alpha → testo trasparente in lower third
 ```
 
 ---
 
-# 23. Alpha Channel
+# 25. Continuità operativa web
 
-Possibilità di generare output trasparente.
+`Prepare Live` verifica che contenuti, template e URL media siano disponibili prima del culto.
 
-Utile per:
+La continuità può usare cache browser, Service Worker e storage web standard. Non richiede software locale installabile o agenti nativi.
 
-* OBS;
-* vMix;
-* streaming;
-* lower third.
-
-Esempio:
-
-```text
-Lyrics
-+
-Transparent Background
-```
-
-senza green screen.
-
----
-
-# 24. Local Engine
-
-Il sistema avrà un piccolo software installabile sul computer della regia.
-
-Funzioni:
-
-* gestione monitor;
-* fullscreen;
-* NDI;
-* alpha;
-* media locali;
-* codec video;
-* cache;
-* offline mode.
-
-Il Cloud controlla.
-
-Il Local Engine esegue.
-
----
-
-# 25. Offline Mode
-
-Prima del culto:
-
-```text
-Prepare Live
-```
-
-Il computer scarica:
-
-* canti;
-* Bibbia;
-* slide;
-* template;
-* immagini;
-* audio;
-* video.
-
-Se Internet cade durante il culto, il servizio continua normalmente.
+Una modalità offline completa è un'estensione web successiva e deve mantenere le stesse route e lo stesso modello dati.
 
 ---
 
@@ -768,12 +825,37 @@ Green
 
 ---
 
-# 30. Stack indicativo
+# 30. Architettura e stack core
+
+L'architettura segue un unico flusso web end-to-end:
+
+```text
+Control / pagine Live Angular
+→ NestJS
+→ PostgreSQL per dati persistenti
+→ Redis Pub/Sub per propagazione realtime
+→ WebSocket
+→ pagine Live Angular
+
+Storage per file e media
+→ asset URL
+→ pagine Live Angular
+```
+
+Angular renderizza contenuto e media nel browser. NestJS gestisce API, autorizzazioni e Live State.
+
+PostgreSQL è la fonte persistente. Redis supporta la distribuzione realtime e non sostituisce il database.
+
+## Requisiti tecnici
+
+* richieste, risposte, eventi e Live State usano DTO condivisi tra Angular e NestJS;
+* nessuna pagina definisce copie locali o tipi isolati dello stesso contratto;
+* il backend distribuisce solo dati, stato e URL media;
+* ogni pagina esegue il rendering HTML localmente nel browser.
 
 ```text
 Frontend
 Angular
-Tailwind
 
 Backend
 NestJS
@@ -790,17 +872,29 @@ WebSocket
 Cache
 Redis
 
-Storage
-S3
+Storage per file e media
+```
 
-Media
-FFmpeg
+Il core non include Output Engine, agenti Rust o Python, NDI SDK, renderer nativi, framebuffer, generazione video server-side o servizi che producono frame.
 
-Local Engine
-Rust
+## Estensioni future opzionali e non core
 
-Desktop
-Tauri
+Un worker media separato potrà usare FFmpeg solo per transcoding, thumbnail, proxy video o normalizzazione media.
+
+NDI resta una possibilità esterna e opzionale. Worship Cloud non implementa direttamente NDI né include NDI SDK.
+
+```text
+HTML URL
+→ HTML-to-NDI Bridge esterno
+→ NDI
+```
+
+Lo stesso output HTML rimane riutilizzabile:
+
+```text
+URL → Browser → HDMI
+URL → vMix Web Browser Input
+URL → eventuale HTML-to-NDI tool esterno → NDI
 ```
 
 ---
@@ -820,10 +914,14 @@ La prima versione deve contenere:
 * video;
 * slide;
 * countdown;
-* Live Mode;
-* Preview;
-* Program;
-* Stage Display;
+* Live Session e Live State unico;
+* Control `/live/:sessionId/control`;
+* Preview `/live/:sessionId/preview`;
+* Main `/live/:sessionId/main`;
+* Stage `/live/:sessionId/stage`;
+* Prompter `/live/:sessionId/prompter`;
+* Alpha `/live/:sessionId/alpha`;
+* Redis Pub/Sub e WebSocket;
 * multi-device;
 * template base.
 
@@ -832,17 +930,18 @@ La prima versione deve contenere:
 Possono arrivare dopo:
 
 ```text
-NDI
-Alpha Channel
-SRT
-RTMP
 OSC
 MIDI
 Stream Deck
 ATEM
 DMX
 AI
+offline web completo
+worker media opzionale
+bridge HTML-to-NDI esterno
 ```
+
+SRT, RTMP e ogni produzione o trasporto video restano responsabilità di software esterni come vMix o OBS.
 
 ---
 
@@ -886,4 +985,6 @@ Il principio centrale del prodotto è:
 
 **un solo contenuto, più destinazioni.**
 
-Lo stesso canto, versetto o media deve poter essere mandato contemporaneamente a **Main Screen, Stage, Gobbo e Streaming**, ognuno con il proprio layout.
+Lo stesso canto, versetto o media deve alimentare **Preview, Main, Stage, Prompter e Alpha**, ognuno con il proprio layout HTML.
+
+**Il sistema non distribuisce video. Distribuisce contenuto e stato realtime; ogni destinazione è una pagina web che effettua localmente il rendering.**

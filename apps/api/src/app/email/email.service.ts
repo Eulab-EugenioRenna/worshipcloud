@@ -1,11 +1,11 @@
 import {
   BadGatewayException,
   Injectable,
-  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { StructuredLogger } from '../common/structured-logger.service';
 
 export interface SendEmailInput {
   readonly to: string;
@@ -17,11 +17,10 @@ export interface SendEmailInput {
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
   private readonly apiKey: string;
   private readonly from: string;
 
-  constructor(config: ConfigService) {
+  constructor(config: ConfigService, private readonly logger: StructuredLogger) {
     this.apiKey = config.get<string>('RESEND_API_KEY', '');
     this.from = config.get<string>('RESEND_FROM_EMAIL', '');
   }
@@ -44,7 +43,14 @@ export class EmailService {
     );
 
     if (error || !data) {
-      this.logger.error('Resend rejected an email delivery request', error);
+      this.logger.error(
+        {
+          event: 'email.resend.delivery-rejected',
+          error: error?.message ?? 'Resend returned no delivery result',
+        },
+        undefined,
+        EmailService.name,
+      );
       throw new BadGatewayException('Email delivery failed');
     }
 

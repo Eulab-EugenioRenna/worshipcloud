@@ -1,0 +1,109 @@
+<header>
+  <div>
+    <p>SETTINGS · VIEWS</p>
+    <h1>Output layouts</h1>
+    <span
+      >Create the canvas for each output before assigning it to a cue or song
+      slide.</span
+    >
+  </div>
+  <button type="button" (click)="newView()">+ New layout</button>
+</header>
+<main>
+  <aside>
+    <p>OUTPUT VIEWS</p>
+    @for (template of templates(); track template.id) {
+    <button
+      type="button"
+      [class.active]="selected()?.id === template.id"
+      (click)="select(template)"
+    >
+      <b>{{ template.name }}</b
+      ><span
+        >{{ template.kind }} · {{ template.target }} · {{ viewSize(template)
+        }}</span
+      >
+    </button>
+    } @empty {
+    <small>Create Main, Stage or Prompter layouts here first.</small> }
+  </aside>
+  <section>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <label
+        >Name<input
+          formControlName="name"
+          placeholder="Prompter lyrics"
+          [readonly]="isDefault(selected())" /></label
+      ><label
+        >Type<worship-select
+          formControlName="kind"
+          [options]="kindOptions"
+          [disabled]="!!selected()"
+          (selectionChange)="kindChanged($any($event))" /></label
+      ><label
+        >View<worship-select
+          formControlName="target"
+          [options]="targetOptions"
+          [disabled]="!!selected()"
+          (selectionChange)="targetChanged($any($event))"
+      /></label>
+      <div class="actions">
+        <button type="submit" [disabled]="form.invalid || saving()">
+          {{ saving() ? 'Saving…' : selected() ? 'Save layout' : 'Create layout'
+          }}</button
+        >@if (isDefault(selected())) {
+        <button type="button" (click)="duplicateDefault()">
+          Duplicate layout</button
+        ><button
+          type="button"
+          class="remove"
+          [disabled]="saving()"
+          (click)="resetDefault()"
+        >
+          Restore default
+        </button>
+        }@if (selected(); as template) {
+        <a
+          class="preview"
+          [routerLink]="['/settings/views', template.id, 'preview']"
+          >Preview</a
+        >@if (!isDefault(template)) {
+        <button
+          type="button"
+          class="remove"
+          [disabled]="saving() || deleting()"
+          (click)="requestDelete()"
+        >
+          Remove
+        </button>
+        } }
+      </div>
+    </form>
+    @if (isDefault(selected())) {
+    <p class="form-note">
+      This fallback applies to every cue sent to {{ selected()?.target }}.
+    </p>
+    } @if (error(); as message) {
+    <p class="form-error">{{ message }}</p>
+    }
+    <div>
+      <worship-canvas-editor
+        [layout]="layout()"
+        [stepGenerator]="form.controls.target.value === 'Alpha'"
+        lyricPreview="Line one&#10;Line two&#10;Line three&#10;Line four&#10;Line five"
+        (layoutChange)="layout.set($event)"
+      />
+    </div>
+  </section>
+</main>
+@if (deleteConfirmation(); as template) {
+<worship-confirmation-dialog
+  title="Remove this layout?"
+  [description]="template.name + ' will be removed. Songs, slides and cues using it will switch to the Default for ' + template.target + '.'"
+  confirmLabel="Remove and use Default"
+  [destructive]="true"
+  [pending]="deleting()"
+  (cancelled)="deleteConfirmation.set(null)"
+  (confirmed)="confirmDelete()"
+/>
+}

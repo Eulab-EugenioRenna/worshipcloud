@@ -1,0 +1,153 @@
+@if (live.state(); as state) {
+<main
+  [class.alpha]="output === 'alpha'"
+  [class.stage]="isStageOutput()"
+  aria-live="polite"
+>
+  @if (state.blackout && (output === 'main' || output === 'alpha')) {
+  <div class="black" aria-label="Blackout"></div>
+  } @else if (isStageOutput()) { @if (state.program; as cue) { @if
+  (hasVisualLayout(cue)) {
+  <worship-live-canvas
+    [cue]="cue"
+    [target]="outputTarget()"
+    [now]="clock()"
+    [countdown]="countdownForOutput(state.countdown)"
+    [nextCue]="nextCue(state, cue)"
+  />
+  } @else {
+  <div class="stage-layout" [class.prompter]="output === 'prompter'">
+    <section class="stage-current">
+      <p class="type">CURRENT</p>
+      <h1>{{ cue.title }}</h1>
+      @if (bibleVerses(cue).length) {
+      <div class="lines">
+        @for (verse of bibleVerses(cue); track verse.reference) {
+        <article>
+          <p>{{ verse.text }}</p>
+          <footer>{{ verse.reference }}</footer>
+        </article>
+        }
+      </div>
+      } @else {
+      <div class="lines">
+        @for (line of cueLines(cue); track $index) {
+        <p>{{ line }}</p>
+        }
+      </div>
+      } @if (output === 'prompter' && cue.notes) {
+      <p class="cue-notes">{{ cue.notes }}</p>
+      }
+    </section>
+    <section class="stage-next">
+      @if (prompterNextStep(state); as next) {
+      <p class="type">NEXT STEP</p>
+      @if (bibleVerses(next.cue, next.step); as nextBible) { @if
+      (nextBible.length) {
+      <div class="next-lines">
+        @for (verse of nextBible; track verse.reference) {
+        <article>
+          <p>{{ verse.text }}</p>
+          <footer>{{ verse.reference }}</footer>
+        </article>
+        }
+      </div>
+      } @else {
+      <div class="next-step-canvas">
+        <worship-live-canvas
+          [cue]="next.cue"
+          [target]="outputTarget()"
+          [now]="clock()"
+          [countdown]="countdownForOutput(state.countdown)"
+          [visualStepOverride]="next.step"
+          [nextCue]="nextCue(state, cue)"
+        />
+      </div>
+      } } } @else {
+      <p class="type">NEXT</p>
+      @if (nextCue(state, cue); as preparedCue) {
+      <h2>{{ preparedCue.title }}</h2>
+      <div class="next-lines">
+        @for (line of cueLines(preparedCue); track $index) {
+        <p>{{ line }}</p>
+        }
+      </div>
+      } @else {
+      <p>No cue prepared.</p>
+      } }
+    </section>
+  </div>
+  } } @else {
+  <h1>Waiting for program.</h1>
+  } } @else if (cueForOutput(state); as cue) { @if (hasVisualLayout(cue)) {
+  <worship-live-canvas
+    [cue]="cue"
+    [target]="outputTarget()"
+    [now]="clock()"
+    [countdown]="countdownForOutput(state.countdown)"
+    [nextCue]="nextCue(state, cue)"
+  />
+  } @else if (cue.type === 'Clock') {
+  <p class="type">CLOCK</p>
+  <h1>{{ clockDisplay() }}</h1>
+  } @else {
+  <p class="type">{{ cue.type }}</p>
+  <h1>{{ cue.title }}</h1>
+  @if (bibleVerses(cue).length) {
+  <div class="lines">
+    @for (verse of bibleVerses(cue); track verse.reference) {
+    <article>
+      <p>{{ verse.text }}</p>
+      <footer>{{ verse.reference }}</footer>
+    </article>
+    }
+  </div>
+  } @else if (cue.content['song']; as song) {
+  <div class="lines">
+    @if ($any(song).activeSection; as activeSection) {
+    <p>{{ activeSection.content }}</p>
+    } @else { @for (section of $any(song).sections; track section.position) {
+    <p>{{ section.content }}</p>
+    } }
+  </div>
+  } @else if (cue.content['media']; as media) { @if ($any(media).kind ===
+  'IMAGE' || $any(media).kind === 'LOGO') {
+  <img class="media image" [src]="$any(media).url" [alt]="cue.title" />
+  } @else if ( $any(media).kind === 'VIDEO' || $any(media).kind ===
+  'MOTION_BACKGROUND' || $any(media).kind === 'COUNTDOWN_VIDEO' ) {
+  <video
+    class="media"
+    [src]="$any(media).url"
+    autoplay
+    loop
+    muted
+    playsinline
+  ></video>
+  } @else if ($any(media).kind === 'AUDIO') {
+  <audio [src]="$any(media).url" autoplay controls></audio>
+  } } @else if (cue.content['slide']; as slide) {
+  <div class="slide-content">
+    @for (block of $any(slide).content.blocks; track block.id) { @if (block.type
+    === 'Text') {
+    <p>{{ $any(block.data).text }}</p>
+    } }
+  </div>
+  } @else if (cue.content['text']; as text) {
+  <div class="lines"><p>{{ text }}</p></div>
+  } } } @else {
+  <div
+    class="blank"
+    [attr.aria-label]="output === 'preview' ? 'No preview content' : 'No program content'"
+  ></div>
+  } @if (state.countdown; as activeCountdown) { @if
+  (countdownForOutput(activeCountdown); as countdown) { @if
+  (!hasCanvasTimer(state)) {
+  <div class="countdown" [class.paused]="countdown.status !== 'Running'">
+    <span>COUNTDOWN {{ countdown.name }}</span
+    ><strong>{{ countdownDisplay(countdown) }}</strong>
+  </div>
+  } } } @if (isStageOutput() && state.operatorMessage; as message) {
+  <aside>{{ message.body }}</aside>
+  }
+</main>
+}

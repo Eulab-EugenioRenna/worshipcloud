@@ -1,0 +1,23 @@
+@if (layout(); as current) {
+  <section class="canvas" [style.background-color]="backgroundColor()" [style.background-image]="backgroundImage()" [style.--canvas-ratio]="aspectRatio(current)">
+    @if (backgroundVideo(); as url) { <video class="background-media" [src]="url" autoplay loop muted playsinline></video> }
+    @for (element of current.elements; track element.id) {
+      <div class="element" [class.shape]="element.type === 'Shape'" [style.left.%]="element.x" [style.top.%]="element.y" [style.width.%]="element.width" [style.height.%]="element.height" [style.z-index]="element.zIndex" [style.color]="color(element)" [style.background-color]="elementBackground(element)" [style.border]="elementBorder(element)" [style.padding]="elementPadding(element)" [style.font-family]="fontFamily(element)" [style.--element-font-size]="fontSize(element)" [style.text-align]="textAlign(element)" [style.align-items]="verticalAlign(element)">
+        @switch (element.type) {
+          @case ('Lyrics') { <p class="copy lyrics">{{ lyrics(element) }}</p> }
+          @case ('NextStep') { @if (nextStep(); as content) { <article class="next-step"><span>{{ $any(element.data).label ?? 'NEXT STEP' }}</span><p class="copy">{{ content }}</p></article> } }
+          @case ('CueTitle') { <p class="copy">{{ cue.title }}</p> }
+          @case ('SectionLabel') { <p class="copy">{{ sectionLabel(element) }}</p> }
+          @case ('Scripture') { <div class="scripture">@for (verse of scriptureVerses(); track verse.reference) { <article><p class="copy">{{ verse.text }}</p><footer>{{ verse.reference }}</footer></article> }</div> }
+          @case ('Text') { <p class="copy">{{ text(element) }}</p> }
+          @case ('Clock') { <time>{{ clock(element) }}</time> }
+          @case ('Timer') { @if (timer(); as value) { <article class="timer"><span>{{ countdownLabel() }}</span><p class="copy">{{ value }}</p></article> } }
+          @case ('Image') { @if (imageUrl(element); as url) { @if (isVideo(element)) { @if (canRenderVideo()) { <video [src]="url" autoplay loop muted playsinline></video> } @else { <p class="copy">{{ mediaLabel() }}</p> } } @else { <img [src]="url" alt="" /> } } }
+          @case ('Video') { @if (imageUrl(element); as url) { @if (canRenderVideo()) { <video [src]="url" autoplay loop muted playsinline></video> } @else { <p class="copy">{{ mediaLabel() }}</p> } } }
+          @case ('Logo') { @if (imageUrl(element); as url) { <img [src]="url" alt="" /> } }
+          @default { <span aria-hidden="true"></span> }
+        }
+      </div>
+    }
+  </section>
+}

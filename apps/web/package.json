@@ -1,0 +1,9 @@
+{
+  "name": "@worship/web",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@worship/shared-dto": "^0.0.1",
+    "@worship/shared-ui": "^0.0.1"
+  }
+}

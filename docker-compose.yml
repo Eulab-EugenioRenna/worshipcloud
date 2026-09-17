@@ -25,7 +25,11 @@ services:
     volumes:
       - worship_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-worship} -d ${POSTGRES_DB:-worship}']
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-worship} -d ${POSTGRES_DB:-worship}',
+        ]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -45,6 +49,14 @@ services:
       retries: 10
     restart: unless-stopped
 
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    ports:
+      - '${LIBRETRANSLATE_PORT:-5001}:5000'
+    volumes:
+      - worship_libretranslate:/home/libretranslate/.local
+    restart: unless-stopped
+
   api:
     <<: *node-service
     command:
@@ -60,6 +72,12 @@ services:
       APP_URL: ${APP_URL:-http://localhost:8080}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      LIBRETRANSLATE_URL: ${LIBRETRANSLATE_INTERNAL_URL:-http://libretranslate:5000}
+      LIBRETRANSLATE_API_KEY: ${LIBRETRANSLATE_API_KEY:-}
+      IMPORT_SOURCES_JSON: ${IMPORT_SOURCES_JSON:-[]}
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-me}
+      JWT_ACCESS_TTL_MINUTES: ${JWT_ACCESS_TTL_MINUTES:-15}
+      JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-30}
     depends_on:
       dependencies:
         condition: service_completed_successfully
@@ -67,6 +85,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      libretranslate:
+        condition: service_started
     expose:
       - '3333'
     healthcheck:
@@ -113,3 +133,4 @@ volumes:
   worship_node_modules:
   worship_postgres:
   worship_redis:
+  worship_libretranslate:

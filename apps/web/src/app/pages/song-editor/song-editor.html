@@ -1,0 +1,264 @@
+<header>
+  <a routerLink="/songs">← Songs</a>@if (song(); as current) {
+  <div>
+    <p>LYRIC VERSION</p>
+    <h1>{{ current.title }}</h1>
+  </div>
+  <span
+    >{{ activeLocale() }} · {{ isSource() ? 'Original' : 'Translation draft'
+    }}</span
+  >
+  }
+</header>
+@if (song(); as current) {
+<main>
+  <aside>
+    <p>LANGUAGES</p>
+    <button
+      type="button"
+      [class.active]="isSource()"
+      (click)="openLocale(current.locale)"
+    >
+      <b>{{ current.locale }}</b><span>Original</span>
+    </button>
+    @for (translation of translations(); track translation.id) {
+    <button
+      type="button"
+      [class.active]="activeLocale() === translation.locale"
+      (click)="openLocale(translation.locale)"
+    >
+      <b>{{ translation.locale }}</b
+      ><span>{{ translation.reviewedAt ? 'Reviewed' : 'Draft' }}</span>
+    </button>
+    }
+    <label
+      >Add / open locale<input
+        #localeInput
+        placeholder="en"
+        (keydown.enter)="openLocale(localeInput.value)"
+    /></label>
+    @if (isSource()) {
+    <div class="visual-nav">
+      <p>SONG VIEWS</p>
+      <small
+        >Assign one Settings layout to each output and choose how many lyric
+        lines form a step.</small
+      ><button
+        type="button"
+        class="open-views"
+        [class.active]="view() === 'visual'"
+        (click)="openSongViews()"
+      >
+        Edit song views</button
+      ><a routerLink="/settings/views">Edit global layouts</a>
+    </div>
+    }
+  </aside>
+
+  <section class="editor">
+    @if (isSource()) {
+    <nav class="view-switch">
+      <button
+        type="button"
+        [class.active]="view() === 'lyrics'"
+        (click)="view.set('lyrics')"
+      >
+        Lyrics</button
+      ><button
+        type="button"
+        [class.active]="view() === 'visual'"
+        (click)="openSongViews()"
+      >
+        Views
+      </button>
+    </nav>
+    } @if (view() === 'lyrics' || !isSource()) {
+    <div class="editor-head">
+      <label
+        >Title<input
+          [value]="title()"
+          (input)="updateTitle($any($event.target).value)"
+      /></label>
+      <div>
+        @if (!isSource()) {
+        <button
+          type="button"
+          class="generate"
+          (click)="generate()"
+          [disabled]="generating()"
+        >
+          {{ generating() ? 'Translating…' : 'Generate draft' }}
+        </button>
+        }<button
+          type="button"
+          class="save"
+          (click)="save()"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Saving…' : isSource() ? 'Save original' : 'Save
+          reviewed translation' }}
+        </button>
+        @if (isSource()) {
+        <button
+          type="button"
+          class="generate"
+          (click)="regenerateSteps()"
+          [disabled]="regeneratingSteps()"
+        >
+          {{ regeneratingSteps() ? 'Recreating…' : 'Recreate steps' }}
+        </button>
+        }
+      </div>
+    </div>
+    <p class="note">
+      @if (isSource()) { Paste or edit the canonical lyric. Song Views assigns
+      the global layout and generates steps for every section. } @else { This
+      version is independent: revise wording, labels and line breaks before use.
+      }
+    </p>
+    @if (isSource()) {
+    <div class="paste-controls">
+      <button type="button" (click)="showPaste.set(!showPaste())">
+        {{ showPaste() ? 'Close paste' : 'Paste or import song text' }}
+      </button>
+    </div>
+    @if (showPaste()) {
+    <div class="paste-panel">
+      <label
+        >Use headings such as Verse 1, Chorus, Bridge, or paste
+        OpenLyrics/OpenSong XML<textarea
+          [value]="pastedLyrics()"
+          (input)="pastedLyrics.set($any($event.target).value)"
+          placeholder="Verse 1&#10;You are faithful…&#10;&#10;Chorus&#10;Forever faithful…"
+        ></textarea></label
+      ><button
+        type="button"
+        class="save"
+        (click)="importPastedLyrics()"
+        [disabled]="!pastedLyrics().trim()"
+      >
+        Create sections
+      </button>
+    </div>
+    } }
+    <div class="sections">
+      @for (section of sections(); track section.id ?? $index) {
+      <article>
+        <worship-select
+          [value]="section.type"
+          [options]="sectionTypeOptions"
+          (selectionChange)="updateSection($index, 'type', $any($event))"
+        /><input
+          [value]="section.label"
+          (input)="updateSection($index, 'label', $any($event.target).value)"
+          aria-label="Section label"
+        /><textarea
+          [value]="section.content"
+          (input)="updateSection($index, 'content', $any($event.target).value)"
+          aria-label="Section lyrics"
+        ></textarea>
+        @if (isSource() && section.id) {
+        <details class="manual-steps">
+          <summary>Manual steps</summary>
+          <label
+            >Separate steps with a blank line<textarea
+              [value]="manualSteps(section.id)"
+              (input)="setManualSteps(section.id!, $any($event.target).value)"
+              aria-label="Manual canonical steps"
+            ></textarea>
+          </label>
+          <button
+            type="button"
+            class="generate"
+            (click)="saveManualSteps(section.id!)"
+            [disabled]="saving()"
+          >
+            Save manual steps
+          </button>
+        </details>
+        }
+      </article>
+      } @empty {
+      <p class="empty">
+        Add the original sections before creating a translation.
+      </p>
+      }
+    </div>
+    <button type="button" class="add-section" (click)="addSection()">
+      + Add section
+    </button>
+    } @else {
+    <div class="views-head">
+      <div>
+        <p>SONG VIEW ASSIGNMENTS</p>
+        <h2>{{ current.title }}</h2>
+        <span
+          >The selected global layout is inherited by every section. Only lyric
+          pagination belongs to this song.</span
+        >
+      </div>
+      <button
+        type="button"
+        class="save"
+        (click)="saveVisualSlide()"
+        [disabled]="visualSaving() || !activeTemplateId()"
+      >
+        {{ visualSaving() ? 'Saving all sections…' : 'Save view assignment' }}
+      </button>
+    </div>
+    <div class="output-tabs">
+      @for (target of ['Main', 'Stage', 'Prompter', 'Alpha']; track target) {
+      <button
+        type="button"
+        [class.active]="activeOutput() === target"
+        (click)="selectOutput($any(target))"
+      >
+        {{ target }}
+      </button>
+      }
+    </div>
+    <div class="view-controls">
+      <div>
+        <small>Global layout</small
+        ><worship-select
+          [value]="activeTemplateId()"
+          [options]="layoutOptions()"
+          placeholder="Choose a layout"
+          (selectionChange)="selectTemplate($any($event))"
+        />
+      </div>
+      <div>
+        <small>Step flow</small
+        ><strong>Inherited from the global layout</strong>
+      </div>
+      <div>
+        <small>Preview section</small
+        ><strong>{{ previewSectionName() || 'No section' }}</strong>
+      </div>
+    </div>
+    @if (visualError(); as message) {
+    <div class="layout-required">
+      <p>{{ message }}</p>
+      <a routerLink="/settings/views">Open Settings → Views</a>
+    </div>
+    } @if (activeVisualSlide(); as visualSlide) {
+    <p class="inheritance-note">
+      Canvas, elements, fonts, background and media come from
+      <a routerLink="/settings/views">Settings → Views</a>. Changing the layout
+      here applies it to all {{ visualSlides().length }} song sections.
+    </p>
+    <worship-canvas-editor
+      [layout]="visualLayout()"
+      [lyricPreview]="visualLyricPreview(visualSlide)"
+      mode="position"
+    />
+    } @else {
+    <div class="empty">
+      <p>NO GENERATED STEPS</p>
+      <h2>Save the lyrics first.</h2>
+      <span>Each saved section will receive its first step automatically.</span>
+    </div>
+    } }
+  </section>
+</main>
+}

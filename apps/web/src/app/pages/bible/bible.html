@@ -1,0 +1,146 @@
+<div class="page-shell">
+  <header>
+    <div>
+      <p class="eyebrow">SCRIPTURE LIBRARY</p>
+      <h1>Bible</h1>
+      <span>Import a translation and read its chapters.</span>
+    </div>
+    <div class="import-actions">
+      <input
+        #bibleImport
+        type="file"
+        accept="application/json,application/xml,text/xml,.json,.xml"
+        (change)="importFile($any($event.target))"
+      />
+      <button
+        type="button"
+        (click)="bibleImport.click()"
+        [disabled]="importing()"
+      >
+        Import Bible JSON/XML
+      </button>
+      <small>Canonical JSON or Zefania XMLBIBLE</small>
+    </div>
+  </header>
+
+  @if (importMessage()) {
+  <p class="import-message" role="status">{{ importMessage() }}</p>
+  } @if (importError()) {
+  <p class="import-error" role="alert">{{ importError() }}</p>
+  }
+
+  <form
+    class="import-panel"
+    [formGroup]="importForm"
+    (ngSubmit)="importRemote()"
+  >
+    <div>
+      <p>IMPORT SOURCE</p>
+      <span
+        >Use GetBible, a configured paid service, or a public repository
+        URL.</span
+      >
+    </div>
+    <label
+      >Provider<worship-select
+        formControlName="sourceId"
+        [options]="importSourceOptions()"
+        placeholder="Select source"
+        (selectionChange)="$any($event) ? chooseImportSource($any($event)) : usePublicUrl()"
+    /></label>
+    @if (selectedImportSource(); as source) { @if (source.requiresResource) {
+    <label
+      >Translation / resource<input
+        formControlName="resource"
+        placeholder="e.g. kjv"
+      /><small>{{ source.description }}</small></label
+    >
+    } } @else {
+    <label
+      >Public JSON URL<input
+        formControlName="url"
+        type="url"
+        placeholder="https://raw.githubusercontent.com/.../bible.json"
+    /></label>
+    }
+    <button type="submit" [disabled]="importing()">
+      {{ importing() ? 'Importing…' : 'Import Bible' }}
+    </button>
+  </form>
+
+  <form class="search-panel" [formGroup]="searchForm" (ngSubmit)="search()">
+    <label
+      >Translation<worship-select
+        formControlName="translationId"
+        [options]="translationOptions()"
+        placeholder="Select translation"
+        (selectionChange)="chooseTranslation($any($event))"
+    /></label>
+    <label class="reference"
+      >Reference<input
+        formControlName="query"
+        placeholder="Lc 4:3-16"
+        autocomplete="off"
+      /><small>Textual reference takes priority over selectors.</small></label
+    >
+    <button
+      type="submit"
+      [disabled]="searching() || !searchForm.controls.translationId.value || !reference()"
+    >
+      {{ searching() ? 'Searching…' : 'Find passage' }}
+    </button>
+  </form>
+
+  <section class="selector-panel" [formGroup]="searchForm">
+    <div>
+      <p>OR SELECT A PASSAGE</p>
+      <span>Leave verses empty to prepare the full chapter.</span>
+    </div>
+    <label
+      >Book<worship-select
+        formControlName="book"
+        [options]="bookOptions()"
+        placeholder="Select book"
+        (selectionChange)="chooseBook($any($event))"
+    /></label>
+    <label
+      >Chapter<worship-select
+        formControlName="chapter"
+        [options]="chapterOptions()"
+        placeholder="Select chapter"
+        [disabled]="!searchForm.controls.book.value"
+        (selectionChange)="chooseChapter($any($event))"
+    /></label>
+    <label
+      >From verse<worship-select
+        formControlName="verseStart"
+        [options]="verseOptions()"
+        placeholder="All verses"
+        [disabled]="!searchForm.controls.chapter.value"
+    /></label>
+    <label
+      >To verse<worship-select
+        formControlName="verseEnd"
+        [options]="verseOptions()"
+        placeholder="Same verse"
+        [disabled]="!searchForm.controls.verseStart.value"
+    /></label>
+  </section>
+
+  @if (!translations().length) {
+  <p class="empty-state">
+    Add and import a translation through the Bible API before searching
+    Scripture.
+  </p>
+  } @if (passage(); as result) {
+  <article class="passage">
+    <div class="passage-top"><p>{{ result.translationAbbreviation }}</p></div>
+    <h2>{{ result.reference }}</h2>
+    <div class="verses">
+      @for (verse of result.verses; track verse.id) {
+      <p><sup>{{ verse.verse }}</sup>{{ verse.text }}</p>
+      }
+    </div>
+  </article>
+  }
+</div>

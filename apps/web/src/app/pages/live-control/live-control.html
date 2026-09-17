@@ -1,0 +1,205 @@
+<header class="control-header">
+  <a routerLink="/dashboard" class="brand">Worship <strong>Cloud</strong></a>
+  <p>LIVE CONTROL</p>
+  @if (store.session(); as session) {
+  <nav aria-label="Client outputs">
+    <a [href]="session.outputUrls.preview" target="_blank" rel="noopener"
+      >Preview</a
+    ><a [href]="session.outputUrls.main" target="_blank" rel="noopener">Main</a
+    ><a [href]="session.outputUrls.stage" target="_blank" rel="noopener"
+      >Stage</a
+    ><a [href]="session.outputUrls.prompter" target="_blank" rel="noopener"
+      >Prompter</a
+    ><a [href]="session.outputUrls.alpha" target="_blank" rel="noopener"
+      >Alpha</a
+    >
+  </nav>
+  }
+</header>
+@if (store.session(); as session) { @if (store.state(); as state) {
+<div class="control-desk">
+  <aside class="run-sheet">
+    <div class="run-head">
+      <p>SERVICE ITEMS</p>
+      <span>{{ lineup().length }} cues</span>
+    </div>
+    <div class="cue-list">
+      @for (cue of lineup(); track cue.id) {
+      <button
+        type="button"
+        (click)="preview(cue.id)"
+        [disabled]="!canControl(state)"
+        [class.selected]="state.preview?.lineupItemId === cue.id"
+      >
+        <b>{{ cue.position + 1 }}</b
+        ><span><small>{{ cue.type }}</small>{{ cue.title }}</span>
+      </button>
+      }
+    </div>
+  </aside>
+  <main
+    class="cue-workspace"
+    [style.--preview-card-width]="previewCardWidth() + 'px'"
+  >
+    <header>
+      <div>
+        <p>STEPS</p>
+        <h1>{{ state.preview?.title ?? 'Choose a service item' }}</h1>
+      </div>
+      <span class="cue-type"
+        >{{ state.preview?.type ?? 'No cue selected' }}</span
+      >
+    </header>
+    <section class="step-grid fixed-step-grid" aria-label="Live step timeline">
+      <button
+        type="button"
+        class="step-card blank-card"
+        (click)="takeBlank(state)"
+        [class.selected]="!state.program"
+        [disabled]="!canControl(state)"
+      >
+        <header><span>BLANK</span><small>TAKE BLACK</small></header>
+        <div class="step-canvas">
+          <span class="shortcut-legend">ESC</span>
+        </div></button
+      >@if (allVisualStepCards(state); as cards) { @if (cards.length) { @for
+      (card of cards; track (card.visualSlideId ?? 'bible') + ':' + card.step) {
+      <button
+        type="button"
+        class="step-card"
+        (click)="takeVisualStep(state, card.step, card.visualSlideId, card.sectionPosition)"
+        [class.selected]="isStepOnProgram(state, card)"
+        [disabled]="!canControl(state)"
+      >
+        <header>
+          <span>{{ card.label }}</span>@if (card.shortcut) {
+          <small>KEY {{ card.shortcut }}</small> } @else if (card.reference) {
+          <small>{{ card.reference }}</small> }
+        </header>
+        <div class="step-canvas text-only">
+          <p>{{ card.content }}</p>
+          @if (card.shortcut) {
+          <span class="shortcut-legend">{{ card.shortcut }}</span> }
+        </div>
+      </button>
+      } } @else {
+      <article class="empty-slide">
+        <p>{{ previewCopy(state) }}</p>
+        @if (countdownPreview(state); as countdown) {
+        <strong class="countdown-preview">{{ countdown }}</strong>
+        }
+      </article>
+      } }
+    </section>
+    <footer class="preview-size-control">
+      <label for="preview-size">Preview size</label>
+      <span aria-hidden="true">A</span>
+      <input
+        id="preview-size"
+        type="range"
+        min="180"
+        max="420"
+        step="20"
+        [value]="previewCardWidth()"
+        (input)="setPreviewCardWidth($any($event.target).value)"
+        aria-label="Resize every cue preview"
+      />
+      <span class="large" aria-hidden="true">A</span>
+      <output for="preview-size">{{ previewCardWidth() }} px</output>
+    </footer>
+  </main>
+  <aside class="program-panel">
+    <p>PROGRAM</p>
+    @if (state.program; as cue) {
+    <h2>{{ cue.title }}</h2>
+    <span>{{ cue.type }}</span> } @else {
+    <h2>Clear</h2>
+    <span>No cue on air</span> } @if (session.status !== 'Live') {
+    <button
+      class="take"
+      (click)="start(session.serviceId)"
+      [disabled]="!!pendingAction() || session.status === 'Ended'"
+    >
+      {{ pendingAction() === 'StartLive' ? 'Starting…' : session.status ===
+      'Ended' ? 'Session ended' : 'Start live' }}
+    </button>
+    } @else if (isOwner(state)) {
+    <button
+      class="take"
+      (click)="act('Take')"
+      [disabled]="!state.preview || !canControl(state)"
+    >
+      TAKE
+    </button>
+    <div class="program-actions">
+      <button
+        (click)="moveVisualStep(state, -1)"
+        [disabled]="!canMoveVisualStep(state, -1)"
+        aria-label="Previous step"
+        title="Previous step · Left arrow"
+      >
+        ← Step</button
+      ><button
+        (click)="moveVisualStep(state, 1)"
+        [disabled]="!canMoveVisualStep(state, 1)"
+        aria-label="Next step"
+        title="Next step · Right arrow"
+      >
+        Step →</button
+      ><button
+        (click)="act('Clear')"
+        [disabled]="!state.program || !canControl(state)"
+      >
+        Clear</button
+      ><button
+        (click)="act(state.blackout ? 'Unblackout' : 'Blackout')"
+        [disabled]="!canControl(state)"
+      >
+        {{ state.blackout ? 'Restore' : 'Blackout' }}
+      </button>
+    </div>
+    } @else {
+    <button
+      class="take"
+      (click)="requestControl(state)"
+      [disabled]="!!pendingAction() || !!state.programControlRequest"
+    >
+      {{ state.programControlRequest ? 'Control requested' :
+      state.programOwnerId ? 'Request control' : 'Claim control' }}
+    </button>
+    } @if (state.countdown; as countdown) {
+    <div class="timer-actions">
+      <button
+        (click)="act('PauseCountdown')"
+        [disabled]="countdown.status !== 'Running' || !canControl(state)"
+      >
+        Pause timer</button
+      ><button
+        (click)="act('ResumeCountdown')"
+        [disabled]="countdown.status !== 'Paused' || !canControl(state)"
+      >
+        Resume timer
+      </button>
+    </div>
+    }<button
+      class="end"
+      (click)="confirmation.set('end')"
+      [disabled]="!canControl(state)"
+    >
+      End session
+    </button>
+  </aside>
+</div>
+@if (error()) {
+<p class="action-error" role="status">{{ error() }}</p>
+} } } @if (confirmation(); as choice) {
+<worship-confirmation-dialog
+  [title]="choice === 'end' ? 'End this live session?' : 'Release program control?'"
+  [description]="choice === 'end' ? 'Program control will close and the service will be marked complete.' : 'Another operator can take program control after you release it.'"
+  [confirmLabel]="choice === 'end' ? 'End live session' : 'Release control'"
+  [destructive]="choice === 'end'"
+  [pending]="!!pendingAction()"
+  (cancelled)="confirmation.set(null)"
+  (confirmed)="confirm()"
+/>
+}
